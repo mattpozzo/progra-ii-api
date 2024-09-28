@@ -1,27 +1,29 @@
-from typing import Union
+from flask import Flask, request
+from flask_restful import Api, Resource, reqparse
 
-from fastapi import FastAPI
-from pydantic import BaseModel
+app = Flask(__name__)
+api = Api(app)
 
-app = FastAPI()
-
-
-class Item(BaseModel):
-    name: str
-    price: float
-    is_offer: Union[bool, None] = None
-
-
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
+task_parser = reqparse.RequestParser()
+task_parser.add_argument("task_id", type=int,
+                         help="ID number for task", 
+                         required=True)  # No sabemos como usarlo
+todo = dict()
 
 
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Union[str, None] = None):
-    return {"item_id": item_id, "q": q}
+class ToDoList(Resource):
+    def get(self, task_id: str):
+        return {task_id: todo[task_id]}
+
+    def put(self, task_id: int):
+        args = task_parser.parse_args()
+        task_id = args["task_id"]
+        todo[task_id] = request.form[task_id]
+        return {task_id: todo[task_id]}
 
 
-@app.put("/items/{item_id}")
-def update_item(item_id: int, item: Item):
-    return {"item_name": item.name, "item_id": item_id}
+api.add_resource(ToDoList, "/<string:task_id>")
+
+
+if __name__ == "__main__":
+    app.run()
