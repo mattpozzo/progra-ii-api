@@ -8,12 +8,17 @@ api = Namespace('auth', description='Authentication, authorizaiion')
 # })
 
 
-@api.route("/login/<id>")
+@api.route("/<int:id>")
 class Login(Resource):
     """Es un log in"""
     @api.doc("Log In")
     def post(self, id):
         return f"Hola id {id}"
+
+    @api.doc("Get Login")
+    def get(self, id):
+        return f"Hola id {id}"
+    
 
 
 @api.route("/logout<id>")
