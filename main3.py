@@ -7,7 +7,7 @@ from apis import api  # Importar la API definida en el paquete apis
 app = Flask(__name__)
 
 # Configurar la base de datos PostgreSQL
-app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://postgres(ESTE ES EL USUARIO):TUCONTRASEÑA@localhost/PostgresIn10"
+app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://postgres(ESTE ES EL USUARIO):TUCONTRASEÑA@localhost/PostgresIn10 (esta es la base de datos de postgre en pgadmin4 )"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False  # buena práctica
 db = SQLAlchemy(app)  # inicializo la base de datos usando SQLAlchemy
 
