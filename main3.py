@@ -1,23 +1,34 @@
 from flask import Flask, jsonify, request
-from flask_sqlalchemy import SQLAlchemy  # es el ORM que permite a la API interactuar con la base de datos de PostgreSQL
+from flask_sqlalchemy import SQLAlchemy  # ORM que permite a la API interactuar con la base de datos de PostgreSQL
 from sqlalchemy.exc import IntegrityError  # excepción que lanza SQLAlchemy si se ingresa un dato incorrecto
+from werkzeug.security import generate_password_hash, check_password_hash  # para manejar las contraseñas
 from apis import api  # Importar la API definida en el paquete apis
 
 # Configuración de Flask y SQLAlchemy
 app = Flask(__name__)
 
 # Configurar la base de datos PostgreSQL
-app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://postgres(ESTE ES EL USUARIO):TUCONTRASEÑA@localhost/PostgresIn10 (esta es la base de datos de postgre en pgadmin4 )"
+app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://postgres:CONTRASEÑA@localhost/BASEDEDATOS"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False  # buena práctica
-db = SQLAlchemy(app)  # inicializo la base de datos usando SQLAlchemy
+
+db = SQLAlchemy(app)  # Inicializo la base de datos usando SQLAlchemy
 
 # Definición de la clase User
 class User(db.Model):
-    __tablename__ = "user"  # El nombre de la tabla dentro de pgAdmin de PostgreSQL (en nuestro db)
+    __tablename__ = "user"
 
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
-    password = db.Column(db.String(128), nullable=False)
+    password = db.Column(db.String(128), nullable=True)  # Contraseña en texto plano
+    password_hash = db.Column(db.String(128), nullable=False)  # Almacenamos el hash
+
+    def set_password(self, password):
+        self.password = password  # Almacena la contraseña en texto plano
+        self.password_hash = generate_password_hash(password)  # Hashea la contraseña
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)  # Verifica el hash
+
 
     def serialize(self):
         '''
@@ -40,14 +51,16 @@ def register_user():
     -d '{"username": "usuario4", "password": "contraseña"}'
     '''
     data = request.get_json()
-    new_user = User(username=data['username'], password=data['password'])
+    new_user = User(username=data['username'])
+    new_user.set_password(data['password'])  # Hasheamos la contraseña
     db.session.add(new_user)
     try:
         db.session.commit()
         return jsonify(new_user.serialize()), 201  # Devuelve el usuario registrado
     except IntegrityError:
         db.session.rollback()
-        return jsonify({'message': 'Error al registrar el usuario: nombre de usuario ya existe o datos inválidos'}), 400
+        return jsonify({'message': 'Error al registrar el usuario: nombre de usuario ya existe o datos invalidos'}), 400
+
 
 # Ruta para hacer login
 @app.route('/login', methods=['POST'])
@@ -63,10 +76,10 @@ def login_user():
     data = request.get_json()
     user = User.query.filter_by(username=data['username']).first()
 
-    if user and user.password == data['password']:
+    if user and user.check_password(data['password']):  # Verificamos la contraseña hasheada
         return jsonify({'message': f'Bienvenido {user.username}'}), 200
     else:
-        return jsonify({'message': 'Usuario o contrasena incorrectos'}), 401
+        return jsonify({'message': 'Usuario o contraseña incorrectos'}), 401
 
 # Ruta para obtener todos los usuarios (solo para pruebas)
 @app.route('/users', methods=['GET'])
