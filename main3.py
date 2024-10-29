@@ -17,27 +17,27 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 
 
-# Clase User 
+# Clase User (escribe la tabla user)
 class User(db.Model):
-    __tablename__ = "user"
+    __tablename__ = "user" #establecemos la tabla
 
     id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String(80), nullable=False)
     last_name = db.Column(db.String(80), nullable=False)
     email = db.Column(db.String(128), unique=True, nullable=False)
-    password = db.Column(db.String(128), nullable=False)  # Contraseña en texto plano (solo para pruebas)
+    password = db.Column(db.String(128), nullable=False)  # Contraseña en texto plano 
     password_hash = db.Column(db.String(256), nullable=False)  # Contraseña hasheada
     salt = db.Column(db.String(128), nullable=False)
     certified = db.Column(db.Boolean, nullable=False)
 
     def set_password(self, password):
-        self.password = password  # Guarda la contraseña en texto plano (solo para pruebas)
-        self.salt = os.urandom(16).hex()  # Genera un salt único y aleatorio para cada usuario
+        self.password = password  # Guardamos la contraseña en texto plano 
+        self.salt = os.urandom(16).hex()  # Genera un salt único y aleatorio para cada usuario 
         self.password_hash = generate_password_hash(password + self.salt)  # Hashea la contraseña
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password + self.salt)  # Verifica el hash
-
+    #serializamos la rta, esto para no exponer datos importantes (password)
     def serialize(self):
         return {
             "id": self.id,
@@ -48,7 +48,7 @@ class User(db.Model):
         }
 
 
-
+#Clase para registrar usuario
 class RegisterUser(Resource):
     '''EJEMPLO DE USO POR TERMINAL
     curl -X POST http://127.0.0.1:5000/register \
@@ -57,7 +57,9 @@ class RegisterUser(Resource):
 
     '''
     def post(self):
+        #obtenemos los datos en formato json
         data = request.get_json()
+        #definimos el usuario
         new_user = User(
             first_name=data['first_name'],
             last_name=data['last_name'],
@@ -65,9 +67,11 @@ class RegisterUser(Resource):
             certified=data.get('certified', False)
         )
         new_user.set_password(data['password'])  
+        #agrega a la db el usuario
         db.session.add(new_user)
         try:
             db.session.commit()
+            #serializamos el retorno del usuario por seguridad
             return new_user.serialize(), 201
         except IntegrityError:
             db.session.rollback()
@@ -78,11 +82,12 @@ class RegisterUser(Resource):
 class LoginUser(Resource):
     '''EJEMPLO DE LOGIN
     curl -X POST http://127.0.0.1:5000/login \
-    -H "Content-Type: application/json" -d 
-    '{"email": "carlos.martinez@example.com", "password": "contrasena123"}'
+    -H "Content-Type: application/json" \
+    -d '{"email": "carlos.martinez@example.com", "password": "contrasena123"}'
     '''
     def post(self):
         data = request.get_json()
+        #si coincide mail y password salta mensaje de bienvenida si no exception
         user = User.query.filter_by(email=data['email']).first()
         if user and user.check_password(data['password']):
             return {'message': f'Bienvenido {user.first_name} {user.last_name}'}, 200
@@ -96,7 +101,7 @@ class GetUsers(Resource):
     curl GET http:127.0.0.1:5000/users
     '''
     def get(self):
-        users = User.query.all()
+        users = User.query.all() #obtenemos todos los usuarios
         return [user.serialize() for user in users], 200  # Flask-RESTful maneja la serialización JSON
 
 
