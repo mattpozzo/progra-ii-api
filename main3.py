@@ -1,101 +1,126 @@
-from flask import Flask, jsonify, request
-from flask_sqlalchemy import SQLAlchemy  # ORM que permite a la API interactuar con la base de datos de PostgreSQL
-from sqlalchemy.exc import IntegrityError  # excepción que lanza SQLAlchemy si se ingresa un dato incorrecto
-from werkzeug.security import generate_password_hash, check_password_hash  # para manejar las contraseñas
-from apis import api  # Importar la API definida en el paquete apis
+from flask import Flask, request, jsonify
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.exc import IntegrityError
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_restx import Api, Resource, Namespace
+import os
+import jwt
+import datetime
 
-# Configuración de Flask y SQLAlchemy
 app = Flask(__name__)
+api = Api(app)
 
-# Configurar la base de datos PostgreSQL
-app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://postgres:CONTRASEÑA@localhost/BASEDEDATOS"
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False  # buena práctica
+app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://USUARIO:CONTRASEÑA@localhost/BASEDEDATOS"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config['SECRET_KEY'] = 'tu_secreto_super_secreto'
 
-db = SQLAlchemy(app)  # Inicializo la base de datos usando SQLAlchemy
+db = SQLAlchemy(app)
 
-# Definición de la clase User
+# Clase User
 class User(db.Model):
     __tablename__ = "user"
-
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    password = db.Column(db.String(128), nullable=True)  # Contraseña en texto plano
-    password_hash = db.Column(db.String(128), nullable=False)  # Almacenamos el hash
+    first_name = db.Column(db.String(80), nullable=False)
+    last_name = db.Column(db.String(80), nullable=False)
+    email = db.Column(db.String(128), unique=True, nullable=False)
+    password_hash = db.Column(db.String(256), nullable=False)
+    salt = db.Column(db.String(128), nullable=False)
+    certified = db.Column(db.Boolean, nullable=False)
 
     def set_password(self, password):
-        self.password = password  # Almacena la contraseña en texto plano
-        self.password_hash = generate_password_hash(password)  # Hashea la contraseña
+        self.salt = os.urandom(16).hex()
+        self.password_hash = generate_password_hash(password + self.salt)
 
     def check_password(self, password):
-        return check_password_hash(self.password_hash, password)  # Verifica el hash
-
+        return check_password_hash(self.password_hash, password + self.salt)
 
     def serialize(self):
-        '''
-        Convierte una instancia de la clase a un formato similar al formato JSON.
-        Esto se hace para que la app entienda el mensaje.
-        '''
         return {
             "id": self.id,
-            "username": self.username
-            # No devolveremos la contraseña por razones de seguridad
+            "first_name": self.first_name,
+            "last_name": self.last_name,
+            "email": self.email,
+            "certified": self.certified
         }
 
-# Ruta para registrar un nuevo usuario
-@app.route('/register', methods=['POST'])
-def register_user():
+# Crear un namespace para usuarios
+user_ns = Namespace('users', description='Operaciones relacionadas con usuarios')
+api.add_namespace(user_ns)
+
+# Clase para registrar usuario
+@user_ns.route('/register')
+class RegisterUser(Resource):
     '''
-    Registra un usuario utilizando curl:
-    -X POST http://127.0.0.1:5000/register \
+    curl -X POST http://127.0.0.1:5000/users/register \
     -H "Content-Type: application/json" \
-    -d '{"username": "usuario4", "password": "contraseña"}'
+    -d '{"first_name": "", "last_name": "", "email": "", "password": "", "certified": true}'
     '''
-    data = request.get_json()
-    new_user = User(username=data['username'])
-    new_user.set_password(data['password'])  # Hasheamos la contraseña
-    db.session.add(new_user)
-    try:
-        db.session.commit()
-        return jsonify(new_user.serialize()), 201  # Devuelve el usuario registrado
-    except IntegrityError:
-        db.session.rollback()
-        return jsonify({'message': 'Error al registrar el usuario: nombre de usuario ya existe o datos invalidos'}), 400
+    def post(self):
+        data = request.get_json()
+        new_user = User(
+            first_name=data['first_name'],
+            last_name=data['last_name'],
+            email=data['email'],
+            certified=data.get('certified', False)
+        )
+        new_user.set_password(data['password'])
+        db.session.add(new_user)
+        try:
+            db.session.commit()
+            return new_user.serialize(), 201
+        except IntegrityError:
+            db.session.rollback()
+            return {'message': 'Error al registrar el usuario: email ya existe o datos invalidos'}, 400
 
-
-# Ruta para hacer login
-@app.route('/login', methods=['POST'])
-def login_user():
+# Clase para hacer login y generar un JWT
+@user_ns.route('/login')
+class LoginUser(Resource):
     '''
-    Función que busca usuarios ya registrados y si existe manda un mensaje.
-    Para usarlo:
-    hacer login con un usuario utilizando curl:
-    -X POST http://127.0.0.1:5000/login \
-    -H "Content-Type:application/json" \
-    -d '{"username":"usuario4","password":"contraseña"}'
+    curl -X POST http://127.0.0.1:5000/users/login \
+    -H "Content-Type: application/json" \
+    -d '{"email": "laura.martinez@example.com", "password": "securepassword123"}'
+    DEVUELVE UN TOKEN
     '''
-    data = request.get_json()
-    user = User.query.filter_by(username=data['username']).first()
+    def post(self):
+        data = request.get_json()
+        user = User.query.filter_by(email=data['email']).first()
+        if user and user.check_password(data['password']):
+            token = jwt.encode({
+                'user_id': user.id,
+                'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+            }, app.config['SECRET_KEY'], algorithm="HS256")
+            return {'token': token}, 200
+        else:
+            return {'message': 'Usuario o contraseña incorrectos'}, 401
 
-    if user and user.check_password(data['password']):  # Verificamos la contraseña hasheada
-        return jsonify({'message': f'Bienvenido {user.username}'}), 200
-    else:
-        return jsonify({'message': 'Usuario o contraseña incorrectos'}), 401
-
-# Ruta para obtener todos los usuarios (solo para pruebas)
-@app.route('/users', methods=['GET'])
-def get_users():
+# Clase para obtener todos los usuarios (requiere token de autenticación)
+@user_ns.route('/')
+class GetUsers(Resource):
     '''
-    Función para obtener los usuarios registrados en la tabla user.
-    Para obtenerlos hay que hacer curl:
-    -X GET http://127.0.0.1:5000/users
+    curl -X GET http://127.0.0.1:5000/users/ \
+    -H "Authorization: Bearer <token>"
     '''
-    users = User.query.all()
-    return jsonify([user.serialize() for user in users]), 200  # Devuelve la lista de usuarios
+    def get(self):
+        auth_header = request.headers.get('Authorization')
+        if not auth_header:
+            return {'message': 'Token es requerido'}, 403
+        
+        token_parts = auth_header.split()
+        if len(token_parts) != 2 or token_parts[0] != 'Bearer':
+            return {'message': 'Token formato invalido'}, 403
+        
+        token = token_parts[1]
 
-# Inicializamos las rutas de la API
-api.init_app(app)
+        try:
+            decoded_token = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+            users = User.query.all()
+            return [user.serialize() for user in users], 200
+        except jwt.ExpiredSignatureError:
+            return {'message': 'Token ha expirado, por favor ingresa nuevamente'}, 401
+        except jwt.InvalidTokenError:
+            return {'message': 'Token invalido'}, 401
 
 if __name__ == "__main__":
     with app.app_context():
-        db.create_all()  # Crea las tablas si no existen
-    app.run(debug=True)
+        db.create_all()
+    app.run(debug=True, port=5000)
