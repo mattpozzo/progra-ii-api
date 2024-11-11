@@ -1,36 +1,23 @@
-from requests import put, get, delete
+from requests import put, get, delete, post
 
-task_local = {f"task{i}": f"BBB{i}" for i in range(3)}
-# print("Registro actual")
-# print(get("http://127.0.0.1:5000/task1").json())
+#probando que el token es necesario
+print('Probando que el token es necesario')
+get_users_test1 = get('http://127.0.0.1:5000/users/')
+print(get_users_test1.json())
 
-print("Probando POST")
-for key, value in task_local.items():
-    url = f"http://127.0.0.1:5000/{key}"
-    response = put(url, data={"name": value, "realizado": True})
-    print(response.json())
-    print(response.status_code)
+registro = post('http://127.0.0.1:5000/users/register',
+                headers={'Content-Type': 'application/json'},
+                json={"first_name": "Marcelo", 
+                      "last_name": "Ulrich", 
+                      "email": "mulrich@estudiantes.unsam.edu.ar", 
+                      "password": "pass123", 
+                      "certified": False})
 
-print("Probando GET")
-for key in task_local.keys():
-    url = f"http://127.0.0.1:5000/{key}"
-    response = get(url)
-    print(response)
-    print(response.json())
-    print(response.status_code)
+print('Probando registro...')
+if registro.status_code == 201:
+    print('Registro exitoso')
+else:
+    print('ERROR en registro: '+registro.json()['message'])
 
-print("Probando DELETE")
 
-url1 = "http://127.0.0.1:5000/task2"
-url2 = "http://127.0.0.1:5000/task3"
 
-res1 = delete(url1)
-print("Eliminando task2")
-print(res1)
-print(res1.json())
-res2 = delete(url2)
-print("Elimnando task3 inexistente, no rompe")
-print(res2)
-print(res2.json())
-print("Chequeo que task2 este eliminado")
-print(get(url1).json())

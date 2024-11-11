@@ -6,12 +6,13 @@ from flask_restx import Api, Resource, Namespace
 import os
 import jwt
 import datetime
+from dotenv import load_dotenv
 
 app = Flask(__name__) #instancia de flask
 api = Api(app)  # instancia de Api de flask_restx, una bifurcación de flask_restful, encargada de crear y organizar las rutas de la API
 
-
-app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://postgres:clave@localhost/PostgresIn10"
+load_dotenv()
+app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv('SQLALCHEMY_DATABASE_URI')
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config['SECRET_KEY'] = 'tu_secreto_super_secreto'
 
