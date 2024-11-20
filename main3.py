@@ -2,17 +2,21 @@ from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_restx import Api, Resource, Namespace
+from flask_restx import Api, Resource, Namespace, fields
 import os
 import jwt
 import datetime
 from dotenv import load_dotenv
+import jwt  # Debe ser de la librería PyJWT
+import datetime
+from dotenv import load_dotenv
+
 
 app = Flask(__name__) #instancia de flask
 api = Api(app)  # instancia de Api de flask_restx, una bifurcación de flask_restful, encargada de crear y organizar las rutas de la API
 
 load_dotenv()
-app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv('SQLALCHEMY_DATABASE_URI')
+app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://postgres:hola1234T@localhost/PostgresIn10"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config['SECRET_KEY'] = 'tu_secreto_super_secreto'
 
@@ -407,8 +411,133 @@ class UserTrophy(db.Model):
 
 
 
+#INGREDIENTES Y MEALS NUEVAS TABLAS 20/11
+
+# Definir el modelo Ingredient
+class Ingredient(db.Model):
+    __tablename__ = 'ingredient'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), nullable=False)
+
+# Definir el modelo para la representación JSON (para la documentación)
+ingredient_model = api.model('Ingredient', {
+    'id': fields.Integer(readonly=True),
+    'name': fields.String(required=True)
+})
+
+class Recipe(db.Model):
+    __tablename__ = 'recipe'
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(255), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    body = db.Column(db.Text, nullable=True)
+    author = db.Column(db.String(255), nullable=True)
 
 
+#Tabla relacional entre ingredientes y recetas
+class RecipeIngredient(db.Model):
+    __tablename__ = 'recipe_ingredient'
+    id = db.Column(db.Integer, primary_key=True)
+    recipe_id = db.Column(db.Integer, db.ForeignKey('recipe.id'), nullable=False)
+    ingredient_id = db.Column(db.Integer, db.ForeignKey('ingredient.id'), nullable=False)
+    quantity = db.Column(db.String(50), nullable=False)
+
+    recipe = db.relationship('Recipe', backref=db.backref('ingredients', lazy=True)) #Permite acceder desde una receta a sus ingredientes
+    ingredient = db.relationship('Ingredient', backref=db.backref('recipes', lazy=True)) #Permite acceder desde sus ingredientes a su receta
+
+
+
+class Review(db.Model):
+    __tablename__ = 'review'
+    id = db.Column(db.Integer, primary_key=True)
+    comment = db.Column(db.Text, nullable=True)
+    rating = db.Column(db.Integer, nullable=False)
+    recipe_id = db.Column(db.Integer, db.ForeignKey('recipe.id'), nullable=False)
+    author = db.Column(db.String(255), nullable=True)
+
+    recipe = db.relationship('Recipe', backref=db.backref('reviews', lazy=True)) #Permite relacionar las recetas con sus reviews
+
+
+
+
+
+class MealSchedule(db.Model):
+    __tablename__ = 'meal_schedule'
+    id = db.Column(db.Integer, primary_key=True)
+    week_day = db.Column(db.String(50), nullable=False)
+    hour = db.Column(db.Time, nullable=False)
+    recipe_id = db.Column(db.Integer, db.ForeignKey('recipe.id'), nullable=False)
+
+    recipe = db.relationship('Recipe', backref=db.backref('meal_schedules', lazy=True)) #permite relacionar recetas con meal_schedules esto a partir de una referencia inversa
+    #a travez de backref
+
+
+
+class TrainingPlan(db.Model):  # Modificada para incluir la relación con User
+    __tablename__ = 'training_plan'
+    id = db.Column(db.Integer, primary_key=True)
+    description = db.Column(db.Text, nullable=True)
+    completed_weeks = db.Column(db.Integer, nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  # Relación con User
+
+    user = db.relationship('User', backref=db.backref('training_plans', lazy=True))  # Relación ORM
+
+
+
+
+# Ingredientes
+# Ruta para crear un ingrediente
+# Clase para manejar los ingredientes
+class IngredientResource(Resource):
+    # POST para crear un nuevo ingrediente
+    @api.expect(ingredient_model)  # Espera el modelo para la solicitud POST
+    def post(self):
+        '''
+    Crear un ingrediente
+    curl -X POST http://localhost:5000/ingredients \
+    -H "Content-Type: application/json" \
+    -d '{"name": "Tomate"}'
+    '''
+        data = request.get_json()  # Obtenemos los datos JSON de la solicitud
+        name = data.get('name')  # Extraemos el nombre del ingrediente
+
+        if not name:
+            return {'message': 'Name is required'}, 400
+
+        ingredient = Ingredient(name=name)  # Creamos el nuevo ingrediente
+        db.session.add(ingredient)  # Lo agregamos a la sesión de la base de datos
+        db.session.commit()  # Confirmamos la transacción
+
+        return {'id': ingredient.id, 'name': ingredient.name}, 201  # Retornamos el ingrediente creado en formato JSON
+
+    # GET para obtener todos los ingredientes
+    def get(self):
+        '''
+        obtener todos los ingredientes
+         curl -X GET http://localhost:5000/ingredients
+        '''
+        ingredients = Ingredient.query.all()  # Consulta todos los ingredientes
+        return [{'id': ingredient.id, 'name': ingredient.name} for ingredient in ingredients], 200  # Retorna la lista de ingredientes
+
+
+# Clase para obtener un ingrediente específico por ID
+class IngredientByIdResource(Resource):
+    # GET para obtener un ingrediente específico por ID
+    '''
+    curl -X GET http://localhost:5000/ingredients/1
+    '''
+    
+    def get(self, id):
+        ingredient = Ingredient.query.get(id)
+        if ingredient:
+            return {'id': ingredient.id, 'name': ingredient.name}, 200
+        else:
+            return {'message': 'Ingredient not found'}, 404
+
+
+
+api.add_resource(IngredientResource, '/ingredients')  # Para obtener todos los ingredientes y crear nuevos
+api.add_resource(IngredientByIdResource, '/ingredients/<int:id>')  # Para obtener un ingrediente por ID
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
