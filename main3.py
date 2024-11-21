@@ -419,11 +419,7 @@ class Ingredient(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), nullable=False)
 
-# Definir el modelo para la representación JSON (para la documentación)
-ingredient_model = api.model('Ingredient', {
-    'id': fields.Integer(readonly=True),
-    'name': fields.String(required=True)
-})
+
 
 class Recipe(db.Model):
     __tablename__ = 'recipe'
@@ -490,7 +486,7 @@ class TrainingPlan(db.Model):  # Modificada para incluir la relación con User
 # Clase para manejar los ingredientes
 class IngredientResource(Resource):
     # POST para crear un nuevo ingrediente
-    @api.expect(ingredient_model)  # Espera el modelo para la solicitud POST
+   # Espera el modelo para la solicitud POST
     def post(self):
         '''
     Crear un ingrediente
