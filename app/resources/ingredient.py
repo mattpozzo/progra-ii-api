@@ -38,7 +38,7 @@ class IngredientResource(Resource):
         ingredients = Ingredient.query.all()
         return [{'id': ingredient.id, 'name': ingredient.name} for ingredient in ingredients], 200
 
-
+@ingredients_ns.route('/<int:id>')  # Define la ruta /ingredients/<id>
 class IngredientByIdResource(Resource):
     # GET para obtener un ingrediente específico por ID
     '''
