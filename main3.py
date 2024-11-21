@@ -481,59 +481,8 @@ class TrainingPlan(db.Model):  # Modificada para incluir la relación con User
 
 
 
-# Ingredientes
-# Ruta para crear un ingrediente
-# Clase para manejar los ingredientes
-class IngredientResource(Resource):
-    # POST para crear un nuevo ingrediente
-   # Espera el modelo para la solicitud POST
-    def post(self):
-        '''
-    Crear un ingrediente
-    curl -X POST http://localhost:5000/ingredients \
-    -H "Content-Type: application/json" \
-    -d '{"name": "Tomate"}'
-    '''
-        data = request.get_json()  # Obtenemos los datos JSON de la solicitud
-        name = data.get('name')  # Extraemos el nombre del ingrediente
-
-        if not name:
-            return {'message': 'Name is required'}, 400
-
-        ingredient = Ingredient(name=name)  # Creamos el nuevo ingrediente
-        db.session.add(ingredient)  # Lo agregamos a la sesión de la base de datos
-        db.session.commit()  # Confirmamos la transacción
-
-        return {'id': ingredient.id, 'name': ingredient.name}, 201  # Retornamos el ingrediente creado en formato JSON
-
-    # GET para obtener todos los ingredientes
-    def get(self):
-        '''
-        obtener todos los ingredientes
-         curl -X GET http://localhost:5000/ingredients
-        '''
-        ingredients = Ingredient.query.all()  # Consulta todos los ingredientes
-        return [{'id': ingredient.id, 'name': ingredient.name} for ingredient in ingredients], 200  # Retorna la lista de ingredientes
 
 
-# Clase para obtener un ingrediente específico por ID
-class IngredientByIdResource(Resource):
-    # GET para obtener un ingrediente específico por ID
-    '''
-    curl -X GET http://localhost:5000/ingredients/1
-    '''
-    
-    def get(self, id):
-        ingredient = Ingredient.query.get(id)
-        if ingredient:
-            return {'id': ingredient.id, 'name': ingredient.name}, 200
-        else:
-            return {'message': 'Ingredient not found'}, 404
-
-
-#ESTO NO SE USA EN LA API, USAMOS LOS NAMESPACES DIRECTAMENTE
-api.add_resource(IngredientResource, '/ingredients')  # Para obtener todos los ingredientes y crear nuevos
-api.add_resource(IngredientByIdResource, '/ingredients/<int:id>')  # Para obtener un ingrediente por ID
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
