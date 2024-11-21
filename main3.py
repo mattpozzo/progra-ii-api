@@ -531,7 +531,7 @@ class IngredientByIdResource(Resource):
             return {'message': 'Ingredient not found'}, 404
 
 
-
+#ESTO NO SE USA EN LA API, USAMOS LOS NAMESPACES DIRECTAMENTE
 api.add_resource(IngredientResource, '/ingredients')  # Para obtener todos los ingredientes y crear nuevos
 api.add_resource(IngredientByIdResource, '/ingredients/<int:id>')  # Para obtener un ingrediente por ID
 if __name__ == "__main__":
