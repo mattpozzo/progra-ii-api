@@ -2,8 +2,8 @@ from sqlalchemy import DateTime, func
 from app.models import db
 
 class BaseAudit:
-    created_by = db.Column(db.String(128), db.ForeignKey('user.id'))
-    updated_by = db.Column(db.String(128), db.ForeignKey('user.id'))
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+    updated_by = db.Column(db.Integer, db.ForeignKey('user.id'))
     created_at = db.Column(DateTime(timezone=True), server_default=func.now())
     updated_at = db.Column(DateTime(timezone=True), onupdate=func.now())
     active = db.Column(db.Boolean, default=True)

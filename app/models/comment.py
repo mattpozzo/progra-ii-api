@@ -4,8 +4,8 @@ from app.models.audit.base_audit import BaseAudit
 class Comment(db.Model, BaseAudit):
     __tablename__ = 'comment'
     id = db.Column(db.Integer, primary_key = True)
-    post = db.Column(db.String(128), db.ForeignKey('post.id'))
-    comment = db.Column(db.String(128), db.ForeignKey('comment.id'))
+    post = db.Column(db.Integer, db.ForeignKey('post.id'))
+    comment = db.Column(db.Integer, db.ForeignKey('comment.id'))
     body = db.Column(db.String(), nullable = False)
 
     _post = db.relationship('Post', backref = db.backref('comments'), lazy = True)
