@@ -1,7 +1,7 @@
 from app.models import db
 from app.models.audit.base_audit import BaseAudit
 
-class RequestReceiver(BaseAudit):
+class RequestReceiver(db.Model, BaseAudit):
     __tablename__ = 'request_receiver'
     id = db.Column(db.Integer, primary_key = True)
     user = db.Column(db.String(128), db.ForeignKey('user.id'))

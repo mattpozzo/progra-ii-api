@@ -4,7 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import os
 
 # Clase User
-class User(BaseAudit): #defino un modelo ORM (Object-relational Mapping) que se utiliza para crear una tabla de una base de datos
+class User(db.Model, BaseAudit): #defino un modelo ORM (Object-relational Mapping) que se utiliza para crear una tabla de una base de datos
     #en un codigo en python
     __tablename__ = "user" #creo la tabla user en pgadmin
     id = db.Column(db.Integer, primary_key=True)
