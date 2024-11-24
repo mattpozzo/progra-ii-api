@@ -1,7 +1,7 @@
 from app.models import db
 from app.models.audit.base_audit import BaseAudit
 
-class NotificationUser(BaseAudit):
+class NotificationUser(db.Model, BaseAudit):
     __tablename__ = 'notification_user'
     id = db.Column(db.Integer, primary_key = True)
     notification = db.Column(db.String(128), db.ForeignKey('notification.id'))

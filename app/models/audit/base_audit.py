@@ -1,7 +1,7 @@
 from sqlalchemy import DateTime, func
 from app.models import db
 
-class BaseAudit(db.Model):
+class BaseAudit:
     created_by = db.Column(db.String(128), db.ForeignKey('user.id'))
     updated_by = db.Column(db.String(128), db.ForeignKey('user.id'))
     created_at = db.Column(DateTime(timezone=True), server_default=func.now())

@@ -2,7 +2,7 @@ from app.models import db
 from app.models.audit.base_audit import BaseAudit
 
 # Clase UserTypeGym
-class UserTypeGym(BaseAudit):
+class UserTypeGym(db.Model, BaseAudit):
     __tablename__ = "usertypegym"
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)

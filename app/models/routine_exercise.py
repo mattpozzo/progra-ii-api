@@ -1,7 +1,7 @@
 from app.models import db
 from app.models.audit.base_audit import BaseAudit
 
-class RoutineExercise(BaseAudit):
+class RoutineExercise(db.Model, BaseAudit):
     __tablename__ = 'routine_exercise'
     id = db.Column(db.Integer, primary_key = True)
     sets = db.Column(db.Integer, nullable = False)

@@ -2,7 +2,7 @@ from app.models.audit.base_audit import BaseAudit
 from . import db
 
 # Clase Gym
-class Gym(BaseAudit):
+class Gym(db.Model, BaseAudit):
     __tablename__ = "gym"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), nullable=False)

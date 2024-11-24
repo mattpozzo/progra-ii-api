@@ -1,7 +1,7 @@
 from app.models import db
 from app.models.audit.base_audit import BaseAudit
 
-class Post(BaseAudit):
+class Post(db.Model, BaseAudit):
     __tablename__ = 'post'
     id = db.Column(db.Integer, primary_key = True)
     gym = db.Column(db.String(128), db.ForeignKey('gym.id'))

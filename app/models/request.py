@@ -1,7 +1,7 @@
 from app.models import db
 from app.models.audit.base_audit import BaseAudit
 
-class Request(BaseAudit):
+class Request(db.Model, BaseAudit):
     __tablename__ = 'request'
     id = db.Column(db.Integer, primary_key = True)
     request_status = db.Column(db.String(128), db.ForeignKey('request_status.id'))

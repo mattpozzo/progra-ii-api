@@ -1,7 +1,7 @@
 from app.models import db
 from app.models.audit.base_audit import BaseAudit
 
-class UserTrophy(BaseAudit):
+class UserTrophy(db.Model, BaseAudit):
     __tablename__ = 'user_trophy'
     id = db.Column(db.Integer, primary_key = True)
     user = db.Column(db.String(128), db.ForeignKey('user.id'))
