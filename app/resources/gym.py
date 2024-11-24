@@ -65,7 +65,8 @@ class AddGym(Resource):
 
             new_gym = Gym(
                 name=data['name'],
-                location=data.get('location')
+                location=data.get('location'),
+                created_by=decoded_token['user_id']
             )
             db.session.add(new_gym)
             db.session.commit()
