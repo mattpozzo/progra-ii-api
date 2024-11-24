@@ -9,7 +9,7 @@ class UserTypeGym(db.Model, BaseAudit):
     gym_id = db.Column(db.Integer, db.ForeignKey('gym.id'), nullable=False)
     user_type_id = db.Column(db.Integer, db.ForeignKey('usertype.id'), nullable=False)
 
-    user = db.relationship('User', backref=db.backref('user_type_gyms', lazy=True))
+    user = db.relationship('User', backref=db.backref('user_type_gyms', lazy=True),foreign_keys = [user_id])
     gym = db.relationship('Gym', backref=db.backref('user_type_gyms', lazy=True))
     user_type = db.relationship('UserType', backref=db.backref('user_type_gyms', lazy=True))
 
