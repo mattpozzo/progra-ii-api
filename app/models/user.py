@@ -1,10 +1,9 @@
-from app.models.audit.base_audit import BaseAudit
 from . import db
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
 
 # Clase User
-class User(db.Model, BaseAudit): #defino un modelo ORM (Object-relational Mapping) que se utiliza para crear una tabla de una base de datos
+class User(db.Model): #defino un modelo ORM (Object-relational Mapping) que se utiliza para crear una tabla de una base de datos
     #en un codigo en python
     __tablename__ = "user" #creo la tabla user en pgadmin
     id = db.Column(db.Integer, primary_key=True)
@@ -23,7 +22,7 @@ class User(db.Model, BaseAudit): #defino un modelo ORM (Object-relational Mappin
         return check_password_hash(self.password_hash, password + self.salt)
 
     def serialize(self):
-        return super().serialize() | {
+        return {
             "id": self.id,
             "first_name": self.first_name,
             "last_name": self.last_name,
