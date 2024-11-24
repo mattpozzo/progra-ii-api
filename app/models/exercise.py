@@ -6,7 +6,7 @@ class Exercise(db.Model, BaseAudit):
     id = db.Column(db.Integer, primary_key = True)
     name = db.Column(db.String(128), nullable = False, unique=True)
     description = db.Column(db.String(512))
-    muscle = db.Column(db.String(128), db.ForeignKey('muscle.id')) #Esto es foreign key a tabla muscle group 
+    muscle = db.Column(db.Integer, db.ForeignKey('muscle.id')) #Esto es foreign key a tabla muscle group 
 
     _muscle = db.relationship('Muscle', backref = db.backref('exercises'), lazy = True)
 

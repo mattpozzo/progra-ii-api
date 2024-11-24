@@ -4,8 +4,8 @@ from app.models.audit.base_audit import BaseAudit
 class RequestReceiver(db.Model, BaseAudit):
     __tablename__ = 'request_receiver'
     id = db.Column(db.Integer, primary_key = True)
-    user = db.Column(db.String(128), db.ForeignKey('user.id'))
-    request = db.Column(db.String(128), db.ForeignKey('request.id'))
+    user = db.Column(db.Integer, db.ForeignKey('user.id'))
+    request = db.Column(db.Integer, db.ForeignKey('request.id'))
 
     _user = db.relationship('User', backref = db.backref('requests'), lazy = True)
     _request = db.relationship('Request', backref = db.backref('receivers'), lazy = True)

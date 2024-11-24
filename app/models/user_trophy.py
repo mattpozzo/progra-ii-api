@@ -4,8 +4,8 @@ from app.models.audit.base_audit import BaseAudit
 class UserTrophy(db.Model, BaseAudit):
     __tablename__ = 'user_trophy'
     id = db.Column(db.Integer, primary_key = True)
-    user = db.Column(db.String(128), db.ForeignKey('user.id'))
-    trophy = db.Column(db.String(128), db.ForeignKey('trophy.id'))
+    user = db.Column(db.Integer, db.ForeignKey('user.id'))
+    trophy = db.Column(db.Integer, db.ForeignKey('trophy.id'))
 
     _user = db.relationship('User', backref = db.backref('trophies'), lazy = True)
     _trophy = db.relationship('Trophy', backref = db.backref('users'), lazy = True)
