@@ -8,7 +8,8 @@ class NotificationUser(db.Model, BaseAudit):
     user = db.Column(db.Integer, db.ForeignKey('user.id'))
 
     _notification = db.relationship('Notification', backref = db.backref('users'), lazy = True)
-    _user = db.relationship('User', backref = db.backref('notifications'), lazy = True)
+    _user = db.relationship('User', backref = db.backref('notifications'), lazy = True,
+                                foreign_keys=[user])
 
     def serialize(self):
         return super().serialize() | {
