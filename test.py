@@ -1,36 +1,77 @@
-from requests import put, get, delete
+from requests import put, get, delete, post
 
-task_local = {f"task{i}": f"BBB{i}" for i in range(3)}
-# print("Registro actual")
-# print(get("http://127.0.0.1:5000/task1").json())
+headersJson = {'Content-Type': 'application/json'}
 
-print("Probando POST")
-for key, value in task_local.items():
-    url = f"http://127.0.0.1:5000/{key}"
-    response = put(url, data={"name": value, "realizado": True})
-    print(response.json())
-    print(response.status_code)
+#probando que el token es necesario
+print('Probando que el token es necesario')
+get_users_test1 = get('http://127.0.0.1:5000/users/')
+print(get_users_test1.json())
 
-print("Probando GET")
-for key in task_local.keys():
-    url = f"http://127.0.0.1:5000/{key}"
-    response = get(url)
-    print(response)
-    print(response.json())
-    print(response.status_code)
+registro = post('http://127.0.0.1:5000/users/register',
+                headers=headersJson,
+                json={"first_name": "Marcelo", 
+                      "last_name": "Ulrich", 
+                      "email": "mulrich@estudiantes.unsam.edu.ar", 
+                      "password": "pass123", 
+                      "certified": False})
 
-print("Probando DELETE")
+print('\n\nProbando registro...')
+if registro.status_code == 201:
+    print('Registro exitoso')
+else:
+    print('ERROR en registro: '+registro.json()['message'])
 
-url1 = "http://127.0.0.1:5000/task2"
-url2 = "http://127.0.0.1:5000/task3"
+print('\n\nPrueba error login')
+login_failed = post('http://127.0.0.1:5000/users/login',headers=headersJson,json={"email": "laura.martinez@example.com", "password": "securepassword123"})
+print(login_failed.json())
 
-res1 = delete(url1)
-print("Eliminando task2")
-print(res1)
-print(res1.json())
-res2 = delete(url2)
-print("Elimnando task3 inexistente, no rompe")
-print(res2)
-print(res2.json())
-print("Chequeo que task2 este eliminado")
-print(get(url1).json())
+print('\n\nPrueba login exitoso')
+login_success = post('http://127.0.0.1:5000/users/login',headers=headersJson,json={"email": "mulrich@estudiantes.unsam.edu.ar", "password": "pass123"})
+print(login_success.json())
+token = login_success.json()['token']
+
+headersJson['Authorization'] = 'Bearer '+token
+print('Ahora que tenemos token, pruebo acceder a todos los usuarios')
+users = get('http://127.0.0.1:5000/users/',headers=headersJson)
+print(users.json())
+
+print('\n\nPrueba Gimnasios')
+gyms = get('http://127.0.0.1:5000/gyms/',headers=headersJson)
+print(gyms.json())
+
+print('\n\nAñado Gym')
+new_gym = post('http://127.0.0.1:5000/gyms/add',headers=headersJson,json={'name':'HerculesGym','location':'Villa del Parque'})
+print(new_gym.json())
+
+print('\n\nPrueba Gimnasios Otra Vez')
+gyms = get('http://127.0.0.1:5000/gyms/',headers=headersJson)
+print(gyms.json())
+
+
+print('\n\nPrueba UserType')
+gyms = get('http://127.0.0.1:5000/user_types/',headers=headersJson)
+print(gyms.json())
+
+print('\n\nAñado UserType')
+new_gym = post('http://127.0.0.1:5000/user_types/add',headers=headersJson,json={'name':'Premium'})
+print(new_gym.json())
+
+print('\n\nPrueba UserType Otra Vez')
+gyms = get('http://127.0.0.1:5000/user_types/',headers=headersJson)
+print(gyms.json())
+
+
+print('\n\nPrueba UserTypeGym')
+gyms = get('http://127.0.0.1:5000/user_type_gyms/',headers=headersJson)
+print(gyms.json())
+
+print('\n\nAñado UserType')
+new_gym = post('http://127.0.0.1:5000/user_type_gyms/assign',headers=headersJson,json={
+    'user_id':'2',
+    'gym_id':'1',
+    'user_type_id':'1'})
+print(new_gym.json())
+
+print('\n\nPrueba UserType Otra Vez')
+gyms = get('http://127.0.0.1:5000/user_type_gyms/',headers=headersJson)
+print(gyms.json())
