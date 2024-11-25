@@ -8,7 +8,6 @@ from .resources.gym import gym_ns
 from .resources.usertype import user_type_ns
 from .resources.userTypeGym import user_type_gym_ns
 
-from .models.model import *
 
 def create_app():
     app = Flask(__name__)

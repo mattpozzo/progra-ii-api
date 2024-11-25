@@ -5,7 +5,6 @@ from app.models import db
 from sqlalchemy.exc import IntegrityError
 import jwt
 import datetime
-from app.models.training_plan import TrainingPlan
 # Crear un namespace para usuarios
 user_ns = Namespace('users', description='Operaciones relacionadas con usuarios')
 
@@ -45,7 +44,6 @@ class LoginUser(Resource):
     DEVUELVE UN TOKEN
     '''
     def post(self):
-        tp = TrainingPlan()
         data = request.get_json()
         user = User.query.filter_by(email=data['email']).first()
         if user and user.check_password(data['password']):
