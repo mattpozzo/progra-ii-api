@@ -67,7 +67,7 @@ print(gyms.json())
 
 print('\n\nAñado UserType')
 new_gym = post('http://127.0.0.1:5000/user_type_gyms/assign',headers=headersJson,json={
-    'user_id':'2',
+    'user_id':'1',
     'gym_id':'1',
     'user_type_id':'1'})
 print(new_gym.json())

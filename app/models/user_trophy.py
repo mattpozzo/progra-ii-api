@@ -7,7 +7,7 @@ class UserTrophy(db.Model, BaseAudit):
     user = db.Column(db.Integer, db.ForeignKey('user.id'))
     trophy = db.Column(db.Integer, db.ForeignKey('trophy.id'))
 
-    _user = db.relationship('User', backref = db.backref('trophies'), lazy = True)
+    _user = db.relationship('User', backref = db.backref('trophies'), lazy = True, foreign_keys=[user])
     _trophy = db.relationship('Trophy', backref = db.backref('users'), lazy = True)
 
     def serialize(self):

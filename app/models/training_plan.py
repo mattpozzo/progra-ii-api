@@ -10,11 +10,12 @@ class TrainingPlan(db.Model, BaseAudit):
     description = db.Column(db.String(512))
     completed_week = db.Column(db.Boolean, nullable=False)
 
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
     _user = db.relationship('User',
                             backref=db.backref('training_plans',
-                                               lazy=True))
+                                               lazy=True),
+                            foreign_keys=[user_id])
 
     def serialize(self):
         return super().serialize() | {

@@ -8,22 +8,24 @@ class RoutineExercise(db.Model, BaseAudit):
     sets = db.Column(db.Integer, nullable=False)
     reps = db.Column(db.Integer, nullable=False)
     weight = db.Column(db.Integer, nullable=False)
-    exercise_id = db.Column(db.Integer, db.ForeignKey('exercise.id'),
-                            nullable=False)
+    exercise_id = db.Column(db.Integer, db.ForeignKey('exercise.id'))
     notes = db.Column(db.String(512))
-    session_id = db.Column(db.Integer, db.ForeignKey('session.id'))
-    routine_id = db.Column(db.Integer, db.ForeignKey('routine.id'),
-                           nullable=False)
+    session_id = db.Column(db.Integer, db.ForeignKey('session.id'),
+                           nullable=True)
+    routine_id = db.Column(db.Integer, db.ForeignKey('routine.id'))
 
     _exercise = db.relationship('Exercise',
                                 backref=db.backref('routine_exercises',
-                                                   lazy=True))
+                                                   lazy=True),
+                                foreign_keys=[exercise_id])
     _session = db.relationship('Session',
                                backref=db.backref('routine_exercise',
-                                                  lazy=True))
+                                                  lazy=True),
+                               foreign_keys=[session_id])
     _routine = db.relationship('Routine',
                                backref=db.backref('routine_exercises',
-                                                  lazy=True))
+                                                  lazy=True),
+                               foreign_keys=[routine_id])
 
     def serialize(self):
         return super().serialize() | {
