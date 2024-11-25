@@ -7,7 +7,7 @@ class RequestReceiver(db.Model, BaseAudit):
     user = db.Column(db.Integer, db.ForeignKey('user.id'))
     request = db.Column(db.Integer, db.ForeignKey('request.id'))
 
-    _user = db.relationship('User', backref = db.backref('requests'), lazy = True)
+    _user = db.relationship('User', backref = db.backref('requests'), lazy = True, foreign_keys=[user])
     _request = db.relationship('Request', backref = db.backref('receivers'), lazy = True)
 
     def serialize(self):

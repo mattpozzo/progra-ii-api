@@ -9,7 +9,6 @@ from .resources.usertype import user_type_ns
 from .resources.userTypeGym import user_type_gym_ns
 
 
-
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
