@@ -14,7 +14,8 @@ class Routine(db.Model, BaseAudit):
 
     _user = db.relationship('User',
                             backref=db.backref('routines',
-                                               lazy=True))
+                                               lazy=True),
+                            foreign_keys=[user_id])
     _gym = db.relationship('Gym',
                            backref=db.backref('routines',
                                               lazy=True))
