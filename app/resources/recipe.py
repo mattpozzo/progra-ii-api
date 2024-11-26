@@ -23,7 +23,7 @@ class RecipeResource(Resource):
     @recipe_ns.expect(recipe_model)  # Espera el modelo de entrada
     @recipe_ns.marshal_with(recipe_model, code=201)  # Devuelve la receta con el código 201
     def post(self):
-        '''
+        '''Agregar receta
         curl -X POST http://localhost:5000/recipes/ \
         -H "Content-Type: application/json" \
         -d '{"title": "Milanesa", "description": "Milanesa y papas fritas", "body": "Instrucciones detalladas", "author": "Chef bau"}'
@@ -53,7 +53,7 @@ class RecipeListResource(Resource):
     @recipe_ns.doc('get_recipes')  # Documenta esta operación
     @recipe_ns.marshal_list_with(recipe_model)  # Devuelve una lista de recetas
     def get(self):
-        '''
+        '''obtener todas las recetas
         curl -X GET http://localhost:5000/recipes/ 
 
         '''
@@ -99,13 +99,12 @@ class RecipeIngredientResource(Resource):
             'quantity': recipe_ingredient.quantity
         }, 201
     
-
-@recipe_ns.route('/<int:recipe_id>/ingredients')
-class RecipeIngredientsListResource(Resource):
+@recipe_ns.route('/<int:recipe_id>')
+class RecipeDetailResource(Resource):
     def get(self, recipe_id):
         """
-        Obtener todos los ingredientes de una receta
-        curl -X GET http://localhost:5000/recipes/1/ingredients
+        Obtener los detalles de una receta junto con sus ingredientes
+        curl -X GET http://localhost:5000/recipes/1
         """
         # Verificar si la receta existe
         recipe = Recipe.query.get(recipe_id)
@@ -115,8 +114,8 @@ class RecipeIngredientsListResource(Resource):
         # Obtener los ingredientes asociados a esta receta
         ingredients = RecipeIngredient.query.filter_by(recipe_id=recipe_id).all()
 
-        # Formatear los datos para la respuesta
-        result = [
+        # Formatear los datos de los ingredientes
+        ingredients_data = [
             {
                 'ingredient_id': ri.ingredient_id,
                 'name': ri.ingredient.name,
@@ -124,8 +123,14 @@ class RecipeIngredientsListResource(Resource):
             } for ri in ingredients
         ]
 
-        return {
-            'recipe_id': recipe_id,
-            'recipe_title': recipe.title,
-            'ingredients': result
-        }, 200
+        # Formatear los datos de la receta con los ingredientes
+        recipe_data = {
+            'id': recipe.id,
+            'title': recipe.title,
+            'description': recipe.description,
+            'body': recipe.body,
+            'author': recipe.author,
+            'ingredients': ingredients_data
+        }
+
+        return recipe_data, 200
