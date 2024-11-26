@@ -1,14 +1,12 @@
 from flask_restx import Namespace, Resource
-from flask import request, current_app
+from flask import request
 from app.models import db
 from app.models.ingredient import Ingredient
-
-
 
 # namespace
 ingredients_ns = Namespace('ingredients', description='Operaciones relacionadas con los ingredientes')
 
-# recurso relacionado con ingredientes (junto a sus metodos post y get)
+# recurso relacionado con ingredientes (con validación de duplicados)
 @ingredients_ns.route('/')
 class IngredientResource(Resource):
     def post(self):
@@ -17,13 +15,19 @@ class IngredientResource(Resource):
         curl -X POST http://localhost:5000/ingredients/ \
         -H "Content-Type: application/json" \
         -d '{"name": "Tomate"}'
-       '''
+        '''
         data = request.get_json()
         name = data.get('name')
 
         if not name:
             return {'message': 'Name is required'}, 400
 
+        # Verificar si el ingrediente ya existe
+        existing_ingredient = Ingredient.query.filter_by(name=name).first()
+        if existing_ingredient:
+            return {'message': f'Ingredient with name "{name}" already exists.'}, 400
+
+        # Si no existe, creamos el nuevo ingrediente
         ingredient = Ingredient(name=name)
         db.session.add(ingredient)
         db.session.commit()
