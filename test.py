@@ -1,4 +1,7 @@
 from requests import put, get, delete, post
+from fin_test import delete_all
+
+delete_all()
 
 headersJson = {'Content-Type': 'application/json'}
 
