@@ -7,6 +7,7 @@ from .resources.user import user_ns
 from .resources.gym import gym_ns
 from .resources.usertype import user_type_ns
 from .resources.userTypeGym import user_type_gym_ns
+from .resources.notification import notification_ns
 
 
 def create_app():
@@ -19,6 +20,7 @@ def create_app():
     api.add_namespace(gym_ns)
     api.add_namespace(user_type_ns)
     api.add_namespace(user_type_gym_ns)
+    api.add_namespace(notification_ns)
 
 
     with app.app_context():
