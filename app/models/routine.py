@@ -12,13 +12,13 @@ class Routine(db.Model, BaseAudit):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     gym_id = db.Column(db.Integer, db.ForeignKey('gym.id'))
 
-    _user = db.relationship('User',
-                            backref=db.backref('routines',
-                                               lazy=True),
-                            foreign_keys=[user_id])
-    _gym = db.relationship('Gym',
+    user = db.relationship('User',
                            backref=db.backref('routines',
-                                              lazy=True))
+                                              lazy=True),
+                           foreign_keys=[user_id])
+    gym = db.relationship('Gym',
+                          backref=db.backref('routines',
+                                             lazy=True))
 
     def serialize(self):
         return super().serialize() | {
@@ -26,6 +26,6 @@ class Routine(db.Model, BaseAudit):
             'name': self.name,
             'description': self.description,  # Guarda si es Null,
                                               # podría ser None, PROBAR
-            'user': self._user.serialize(),
-            'gym': self._gym.serialize() if self._gym else None
+            'user': self.user.serialize(),
+            'gym': self.gym.serialize() if self.gym else None
         }

@@ -18,5 +18,5 @@ class Session(db.Model, BaseAudit):
             "id": self.id,
             "date": self.date,
             "duration": self.duration,
-            "user": self.user.serialize()
+            'user': self.user.serialize()
         }

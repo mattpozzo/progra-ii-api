@@ -9,14 +9,14 @@ class Exercise(db.Model, BaseAudit):
     description = db.Column(db.String(512))
     muscle = db.Column(db.Integer, db.ForeignKey('muscle.id'), nullable=False)
 
-    _muscle = db.relationship('Muscle',
-                              backref=db.backref('exercises'),
-                              lazy=True)
+    muscle = db.relationship('Muscle',
+                             backref=db.backref('exercises'),
+                             lazy=True)
 
     def serialize(self):
         return super().serialize() | {
             "id": self.id,
             "name": self.name,
             "description": self.description,
-            "muscle": self._muscle.serialize()
+            "muscle": self.muscle.serialize()
         }
