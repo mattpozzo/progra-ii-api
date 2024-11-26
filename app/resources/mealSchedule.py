@@ -18,6 +18,13 @@ meal_schedule_model = meal_schedule_ns.model('MealSchedule', {
 class MealScheduleListResource(Resource):
     @meal_schedule_ns.expect(meal_schedule_model)
     def post(self):
+        '''
+        curl -X POST http://localhost:5000/meal_schedules/ \
+        -H "Content-Type: application/json" \
+        -d '{"week_day": "Monday", "hour": "12:30:00", "training_plan": "Plan A", "recipe_id": 1}'
+
+        '''
+
         data = request.get_json()
         week_day = data.get('week_day')
         hour = data.get('hour')
