@@ -1,3 +1,4 @@
+from app.models.notification_user import notification_user
 from . import db
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
@@ -14,6 +15,8 @@ class User(db.Model): #defino un modelo ORM (Object-relational Mapping) que se u
     salt = db.Column(db.String(128), nullable=False)
     certified = db.Column(db.Boolean, nullable=False)
 
+    notifications = db.relationship("Notification", secondary=notification_user, backref="users", lazy=True)
+
     def set_password(self, password):
         self.salt = os.urandom(16).hex()
         self.password_hash = generate_password_hash(password + self.salt)
@@ -27,5 +30,6 @@ class User(db.Model): #defino un modelo ORM (Object-relational Mapping) que se u
             "first_name": self.first_name,
             "last_name": self.last_name,
             "email": self.email,
-            "certified": self.certified
+            "certified": self.certified,
+            "notifications": [notification.serialize() for notification in self.notifications]
         }

@@ -2,6 +2,8 @@ from flask_restx import Namespace, Resource
 from flask import request, current_app
 from app.models import db
 from app.models.gym import Gym
+from app.models.exercise import Exercise
+from app.models.muscle import Muscle
 import jwt
 
 gym_ns = Namespace('gyms', description='Operaciones relacionadas con los gimnasios')
@@ -63,7 +65,8 @@ class AddGym(Resource):
 
             new_gym = Gym(
                 name=data['name'],
-                location=data.get('location')
+                location=data.get('location'),
+                created_by=decoded_token['user_id']
             )
             db.session.add(new_gym)
             db.session.commit()

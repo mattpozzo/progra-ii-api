@@ -5,7 +5,6 @@ from app.models import db
 from sqlalchemy.exc import IntegrityError
 import jwt
 import datetime
-
 # Crear un namespace para usuarios
 user_ns = Namespace('users', description='Operaciones relacionadas con usuarios')
 
