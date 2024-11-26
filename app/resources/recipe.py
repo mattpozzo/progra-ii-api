@@ -1,10 +1,10 @@
 from flask_restx import Namespace, Resource, fields
 from flask import request
-from app import db  # Asegúrate de que db esté configurado correctamente
-from app.models.recipe import Recipe  # Asegúrate de importar tu modelo de receta
+from app import db  
+from app.models.recipe import Recipe  
 from app.models.recipeIngredient import RecipeIngredient
 from app.models.ingredient import Ingredient
-# Definir el Namespace
+
 recipe_ns = Namespace('recipes', description='Operaciones relacionadas con recetas')
 
 # Definir el modelo de receta para la API
@@ -21,7 +21,7 @@ recipe_model = recipe_ns.model('Recipe', {
 class RecipeResource(Resource):
     @recipe_ns.doc('create_recipe')  # Documenta esta operación
     @recipe_ns.expect(recipe_model)  # Espera el modelo de entrada
-    @recipe_ns.marshal_with(recipe_model, code=201)  # Devuelve la receta con el código 201
+    @recipe_ns.marshal_with(recipe_model, code=201)  
     def post(self):
         '''Agregar receta
         curl -X POST http://localhost:5000/recipes/ \
@@ -35,7 +35,7 @@ class RecipeResource(Resource):
         body = data.get('body')
         author = data.get('author')
 
-        # Validación de los datos requeridos
+        
         if not title:
             return {'message': 'Title is required'}, 400
 
@@ -45,7 +45,7 @@ class RecipeResource(Resource):
         db.session.commit()
 
         
-        return recipe, 201  # Devuelve la receta creada
+        return recipe, 201  
 
 # Obtener todas las recetas (GET)
 @recipe_ns.route('/')
