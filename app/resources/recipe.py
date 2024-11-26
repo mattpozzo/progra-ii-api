@@ -54,7 +54,7 @@ class RecipeListResource(Resource):
     @recipe_ns.marshal_list_with(recipe_model)  # Devuelve una lista de recetas
     def get(self):
         '''
-        curl -X POST http://localhost:5000/recipes/ -H "Content-Type: application/json" -d '{"title": "carne", "description": "carne", "body": "Instrucciones detalladas", "author": "Chef bau"}'
+        curl -X GET http://localhost:5000/recipes/ 
 
         '''
         recipes = Recipe.query.all()
