@@ -25,6 +25,6 @@ class UserTypeGym(db.Model, BaseAudit):
         return super().serialize() | {
             "id": self.id,
             "user": self.user.serialize(),
-            "gym": self.gym.id.serialize(),
+            "gym": self.gym.serialize(),
             "user_type": self.user_type.serialize()
         }
