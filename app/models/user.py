@@ -3,10 +3,9 @@ from . import db
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
 
-# Clase User
-class User(db.Model): #defino un modelo ORM (Object-relational Mapping) que se utiliza para crear una tabla de una base de datos
-    #en un codigo en python
-    __tablename__ = "user" #creo la tabla user en pgadmin
+
+class User(db.Model):
+    __tablename__ = "user"
     id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String(80), nullable=False)
     last_name = db.Column(db.String(80), nullable=False)
@@ -15,7 +14,10 @@ class User(db.Model): #defino un modelo ORM (Object-relational Mapping) que se u
     salt = db.Column(db.String(128), nullable=False)
     certified = db.Column(db.Boolean, nullable=False)
 
-    notifications = db.relationship("Notification", secondary=notification_user, backref="users", lazy=True)
+    notifications = db.relationship("Notification",
+                                    secondary=notification_user,
+                                    backref="users",
+                                    lazy=True)
 
     def set_password(self, password):
         self.salt = os.urandom(16).hex()
@@ -31,5 +33,6 @@ class User(db.Model): #defino un modelo ORM (Object-relational Mapping) que se u
             "last_name": self.last_name,
             "email": self.email,
             "certified": self.certified,
-            "notifications": [notification.serialize() for notification in self.notifications]
+            "notifications": [notification.serialize() for notification in
+                              self.notifications]
         }

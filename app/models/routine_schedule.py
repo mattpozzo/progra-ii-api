@@ -15,16 +15,16 @@ class RoutineSchedule(db.Model, BaseAudit):
     routine_id = db.Column(db.Integer, db.ForeignKey('routine.id'),
                            nullable=False)
 
-    _training_plan = db.relationship('TrainigPlan',
-                                     backref=db.backref('routine_schedules',
-                                                        lazy=True))
-    _routine = db.relationship('Routine')
+    training_plan = db.relationship('TrainigPlan',
+                                    backref=db.backref('routine_schedules',
+                                                       lazy=True))
+    routine = db.relationship('Routine')
 
     def serialize(self):
         return super().serialize() | {
             "id": self.id,
             'weekday': self.weekday,
             'hour': self.hour,
-            'training_plan': self._training_plan.serialize(),
-            'routine': self._routine.serialize() if self._gym else None
+            'training_plan': self.training_plan.serialize(),
+            'routine': self.routine.serialize()
         }

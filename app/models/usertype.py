@@ -1,6 +1,7 @@
 from app.models import db
 from app.models.audit.base_audit import BaseAudit
 
+
 class UserType(db.Model, BaseAudit):
     __tablename__ = "usertype"
     id = db.Column(db.Integer, primary_key=True)
