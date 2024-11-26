@@ -7,4 +7,4 @@ class Recipe(db.Model):
     title = db.Column(db.String(255), nullable=False)
     description = db.Column(db.Text, nullable=True)
     body = db.Column(db.Text, nullable=True)
-    author = db.Column(db.String(255), nullable=True)
+    author = db.Column(db.Integer, nullable=True)  # FALTA ForeignKey
