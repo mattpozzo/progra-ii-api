@@ -1,6 +1,7 @@
 from app.models.audit.base_audit import BaseAudit
 from . import db
 
+
 # Clase Gym
 class Gym(db.Model, BaseAudit):
     __tablename__ = "gym"
