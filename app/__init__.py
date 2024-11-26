@@ -9,7 +9,7 @@ from .resources.usertype import user_type_ns
 from .resources.userTypeGym import user_type_gym_ns
 from .resources.ingredient import ingredients_ns
 from .resources.recipe import recipe_ns
-
+from .resources.mealSchedule import meal_schedule_ns
 
 
 def create_app():
@@ -24,7 +24,9 @@ def create_app():
     api.add_namespace(user_type_gym_ns)
     api.add_namespace(ingredients_ns)
     api.add_namespace(recipe_ns)
-     
+    api.add_namespace(meal_schedule_ns)
+
+
     with app.app_context():
         db.create_all()
 
