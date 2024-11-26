@@ -75,3 +75,4 @@ print(new_gym.json())
 print('\n\nPrueba UserType Otra Vez')
 gyms = get('http://127.0.0.1:5000/user_type_gyms/',headers=headersJson)
 print(gyms.json())
+

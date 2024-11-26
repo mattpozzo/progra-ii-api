@@ -15,7 +15,7 @@ class RoutineSchedule(db.Model, BaseAudit):
     routine_id = db.Column(db.Integer, db.ForeignKey('routine.id'),
                            nullable=False)
 
-    training_plan = db.relationship('TrainigPlan',
+    training_plan = db.relationship('TrainingPlan',
                                     backref=db.backref('routine_schedules',
                                                        lazy=True))
     routine = db.relationship('Routine')

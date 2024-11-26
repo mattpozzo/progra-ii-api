@@ -3,7 +3,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-app, _ = create_app()
+app, db = create_app()
 
 if __name__ == '__main__':
-    app.run(debug = True)
+    with app.app_context():
+        db.drop_all()
