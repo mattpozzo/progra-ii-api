@@ -62,6 +62,7 @@ class RecipeListResource(Resource):
 
 
 
+# Crear una nueva receta (POST)
 @recipe_ns.route('/<int:recipe_id>/ingredients')
 class RecipeIngredientResource(Resource):
     def post(self, recipe_id):
@@ -78,11 +79,19 @@ class RecipeIngredientResource(Resource):
         if not ingredient_id or not quantity:
             return {'message': 'Ingredient ID and quantity are required'}, 400
 
+        # Obtener la receta y el ingrediente
         recipe = Recipe.query.get(recipe_id)
         ingredient = Ingredient.query.get(ingredient_id)
 
         if not recipe or not ingredient:
             return {'message': 'Recipe or Ingredient not found'}, 404
+
+        # Verificar si el ingrediente ya está asociado a la receta
+        existing_recipe_ingredient = RecipeIngredient.query.filter_by(
+            recipe_id=recipe_id, ingredient_id=ingredient_id).first()
+
+        if existing_recipe_ingredient:
+            return {'message': f'Ingredient "{ingredient.name}" already exists in this recipe.'}, 400
 
         # Crear la relación en RecipeIngredient
         recipe_ingredient = RecipeIngredient(
