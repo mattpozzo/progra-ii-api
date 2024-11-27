@@ -4,7 +4,8 @@ from app import db
 from app.models.recipe import Recipe  
 from app.models.recipeIngredient import RecipeIngredient
 from app.models.ingredient import Ingredient
-
+from app.models.user import User
+from app.resources.auth.authorize import authorize
 recipe_ns = Namespace('recipes', description='Operaciones relacionadas con recetas')
 
 # Definir el modelo de receta para la API
@@ -19,46 +20,39 @@ recipe_model = recipe_ns.model('Recipe', {
 # Crear una nueva receta (POST)
 @recipe_ns.route('/')
 class RecipeResource(Resource):
-    @recipe_ns.doc('create_recipe')  # Documenta esta operación
-    @recipe_ns.expect(recipe_model)  # Espera el modelo de entrada
-    @recipe_ns.marshal_with(recipe_model, code=201)  
-    def post(self):
-        '''Agregar receta
+    @authorize  
+    @recipe_ns.doc('create_recipe') 
+    @recipe_ns.expect(recipe_model)  
+    @recipe_ns.marshal_with(recipe_model, code=201) 
+    def post(self, user: User):
+        '''Agregar una nueva receta
         curl -X POST http://localhost:5000/recipes/ \
         -H "Content-Type: application/json" \
+        -H "Authorization: Bearer <tu_token_jwt>" \
         -d '{"title": "Milanesa", "description": "Milanesa y papas fritas", "body": "Instrucciones detalladas", "author": "Chef bau"}'
-
         '''
+        # Obtener los datos del cuerpo de la solicitud
         data = request.get_json()
         title = data.get('title')
         description = data.get('description')
         body = data.get('body')
         author = data.get('author')
 
-        
+        # Validar que el título esté presente
         if not title:
             return {'message': 'Title is required'}, 400
 
-        # Crear la receta
+        # Crear la receta con los datos proporcionados
         recipe = Recipe(title=title, description=description, body=body, author=author)
+
+        # No asignar created_by (ya no usamos set_created_by)
+
+        # Agregar la receta a la base de datos
         db.session.add(recipe)
         db.session.commit()
 
-        
-        return recipe, 201  
-
-# Obtener todas las recetas (GET)
-@recipe_ns.route('/')
-class RecipeListResource(Resource):
-    @recipe_ns.doc('get_recipes')  # Documenta esta operación
-    @recipe_ns.marshal_list_with(recipe_model)  # Devuelve una lista de recetas
-    def get(self):
-        '''obtener todas las recetas
-        curl -X GET http://localhost:5000/recipes/ 
-
-        '''
-        recipes = Recipe.query.all()
-        return recipes, 200  
+        # Devolver la receta creada con el código 201
+        return recipe, 201
 
 
 
@@ -107,23 +101,51 @@ class RecipeIngredientResource(Resource):
             'ingredient_id': recipe_ingredient.ingredient_id,
             'quantity': recipe_ingredient.quantity
         }, 201
+
+
+
+
+
+
+
+# Obtener todas las recetas (GET)
+@recipe_ns.route('/')
+class RecipeListResource(Resource):
+    @authorize  
+    @recipe_ns.doc('get_recipes') 
+    @recipe_ns.marshal_list_with(recipe_model) 
+    def get(self, user: User):
+        '''Obtener todas las recetas
+        curl -X GET http://localhost:5000/recipes/ \
+        -H "Authorization: Bearer <tu_token_jwt>"
+        '''
+        
+        recipes = Recipe.query.all()
+
+        
+        return recipes, 200
+
+
+
     
 @recipe_ns.route('/<int:recipe_id>')
 class RecipeDetailResource(Resource):
-    def get(self, recipe_id):
+    @authorize
+    def get(self, user: User, recipe_id):
         """
-        Obtener los detalles de una receta junto con sus ingredientes
-        curl -X GET http://localhost:5000/recipes/1
+        Obtener los detalles de una receta junto con sus ingredientes.
+        curl -X GET http://localhost:5000/recipes/1 \
+        -H "Authorization: Bearer <tu_token_jwt>"
         """
-        # Verificar si la receta existe
+        
         recipe = Recipe.query.get(recipe_id)
         if not recipe:
             return {'message': 'Recipe not found'}, 404
 
-        # Obtener los ingredientes asociados a esta receta
+        
         ingredients = RecipeIngredient.query.filter_by(recipe_id=recipe_id).all()
 
-        # Formatear los datos de los ingredientes
+        
         ingredients_data = [
             {
                 'ingredient_id': ri.ingredient_id,
@@ -132,7 +154,7 @@ class RecipeDetailResource(Resource):
             } for ri in ingredients
         ]
 
-        # Formatear los datos de la receta con los ingredientes
+        
         recipe_data = {
             'id': recipe.id,
             'title': recipe.title,

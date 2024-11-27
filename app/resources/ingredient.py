@@ -22,12 +22,12 @@ class IngredientResource(Resource):
         if not name:
             return {'message': 'Name is required'}, 400
 
-        # Verificar si el ingrediente ya existe
+        
         existing_ingredient = Ingredient.query.filter_by(name=name).first()
         if existing_ingredient:
             return {'message': f'Ingredient with name "{name}" already exists.'}, 400
 
-        # Si no existe, creamos el nuevo ingrediente
+        
         ingredient = Ingredient(name=name)
         db.session.add(ingredient)
         db.session.commit()
