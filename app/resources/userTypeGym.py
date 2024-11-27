@@ -1,8 +1,10 @@
 from flask_restx import Namespace, Resource
 from flask import request, current_app
 from app.models import db
-from app.models.userTypeGym import UserTypeGym
+from app.models.models import User, UserTypeGym
 import jwt
+
+from app.resources.auth.authorize import authorize
 
 user_type_gym_ns = Namespace('user_type_gyms',
                              description=('Operaciones relacionadas con la '
@@ -20,21 +22,9 @@ class AssignUserTypeToGym(Resource):
     -H "Content-Type: application/json" \
     -d '{"user_id": 1, "gym_id": 1, "user_type_id": 1}'
     '''
-    def post(self):
-        auth_header = request.headers.get('Authorization')
-        if not auth_header:
-            return {'message': 'Token es requerido'}, 403
-
-        token_parts = auth_header.split()
-        if len(token_parts) != 2 or token_parts[0] != 'Bearer':
-            return {'message': 'Token formato invalido'}, 403
-
-        # token = token_parts[1]
-
+    @authorize
+    def post(user: User, self):
         try:
-            # decoded_token = jwt.decode(token,
-            #                            current_app.config['SECRET_KEY'],
-            #                            algorithms=["HS256"])
             data = request.get_json()
 
             if not all(
@@ -52,13 +42,6 @@ class AssignUserTypeToGym(Resource):
             db.session.add(new_assignment)
             db.session.commit()
             return new_assignment.serialize(), 201
-
-        except jwt.ExpiredSignatureError:
-            return {'message': ('Token ha expirado, '
-                                'por favor ingresa nuevamente')
-                    }, 401
-        except jwt.InvalidTokenError:
-            return {'message': 'Token invalido'}, 401
         except Exception as e:
             return {'message': ('Error al asignar tipo de usuario'
                                 f' a gimnasio: {str(e)}')

@@ -1,7 +1,6 @@
 from flask_restx import Namespace, Resource, fields
 from flask import request
-from app.models.mealSchedule import MealSchedule
-from app.models.recipe import Recipe
+from app.models.models import MealSchedule, Recipe
 from app import db
 
 meal_schedule_ns = Namespace('meal_schedules', description='Operaciones relacionadas con los horarios de comidas')
