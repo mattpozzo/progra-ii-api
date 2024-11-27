@@ -1,5 +1,6 @@
 from app.models import db
 from app.models.audit.base_audit import BaseAudit
+from app.utils import muscles
 
 
 class Muscle(db.Model, BaseAudit):
@@ -14,3 +15,4 @@ class Muscle(db.Model, BaseAudit):
             "name": self.name,
             "description": self.description
         }
+
