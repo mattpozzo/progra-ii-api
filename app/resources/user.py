@@ -1,6 +1,6 @@
 from flask_restx import Namespace, Resource
 from flask import request, current_app
-from app.models.user import User
+from app.models.models import User
 from app.models import db
 from sqlalchemy.exc import IntegrityError
 import jwt

@@ -22,13 +22,13 @@ class BaseAudit:
 
     def serialize(self):
         return {
-            "created_by": (
-                self._created_by.serialize() if self._created_by else None
-            ),
-            "updated_by": (
-                self._updated_by.serialize() if self._updated_by else None
-            ),
-            "created_at": str(self.created_at),
-            "updated_at": str(self.updated_at),
-            "active": self.active
+            # "created_by": (
+            #     self._created_by.serialize() if self._created_by else None
+            # ),
+            # "updated_by": (
+            #     self._updated_by.serialize() if self._updated_by else None
+            # ),
+            # "created_at": str(self.created_at),
+            # "updated_at": str(self.updated_at),
+            # "active": self.active
         }
