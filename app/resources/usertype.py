@@ -1,6 +1,6 @@
 from flask_restx import Namespace, Resource
 from flask import request
-from app.models.usertype import UserType
+from app.models.models import UserType
 from app.models import db
 
 user_type_ns = Namespace('user_types', description='Operaciones relacionadas con los tipos de usuario')
