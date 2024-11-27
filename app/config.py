@@ -5,6 +5,6 @@ load_dotenv()
 
 
 class Config:
-    SQLALCHEMY_DATABASE_URI = "postgresql://postgres:M1croCuts@127.0.0.1:5432/progra-ii"
+    SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SECRET_KEY = "hola1234"
+    SECRET_KEY = os.getenv('DB_SECRET')    
