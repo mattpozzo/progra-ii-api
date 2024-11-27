@@ -1,9 +1,8 @@
 from requests import put, get, delete, post
-from fin_test import delete_all
 
 headersJson = {'Content-Type': 'application/json'}
 
-#probando que el token es necesario
+# probando que el token es necesario
 print('Probando que el token es necesario')
 get_users_test1 = get('http://127.0.0.1:5000/users/')
 print(get_users_test1.json())
