@@ -55,6 +55,8 @@ class Exercise(db.Model, BaseAudit):
             "muscle": self.muscle.serialize()
         }
 
+# Muscle.exercises abajo de Muscle
+
 
 class Gym(db.Model, BaseAudit):
     __tablename__ = "gym"
@@ -102,6 +104,9 @@ class Muscle(db.Model, BaseAudit):
             "name": self.name,
             "description": self.description
         }
+
+
+# Muscle.exercises = db.relationship('Exercise', back_populates="muscle", foreign_keys=[Exercise.id])
 
 
 class Notification(db.Model, BaseAudit):
