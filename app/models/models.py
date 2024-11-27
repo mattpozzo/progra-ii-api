@@ -437,8 +437,8 @@ class User(db.Model):
             "last_name": self.last_name,
             "email": self.email,
             "certified": self.certified,
-            "notifications": [notification.serialize() for notification in
-                              self.notifications]
+            # "notifications": [notification.serialize() for notification in
+            #                   self.notifications]
         }
 
 
@@ -484,12 +484,7 @@ class UserTypeGym(db.Model, BaseAudit):
                              db.ForeignKey('usertype.id'),
                              nullable=False)
 
-    user = db.relationship('User',
-                           backref=db.backref('user_type_gyms',
-                                              lazy=True),
-                           foreign_keys=[user_id])
-    gym = db.relationship('Gym', backref=db.backref('user_type_gyms',
-                                                    lazy=True))
+    user: Mapped['User'] = db.relationship(back_populates="gyms", foreign_keys=[user_id])
     user_type = db.relationship('UserType',
                                 backref=db.backref('user_type_gyms',
                                                    lazy=True))
@@ -501,3 +496,7 @@ class UserTypeGym(db.Model, BaseAudit):
             "gym": self.gym.serialize(),
             "user_type": self.user_type.serialize()
         }
+    
+Gym.users = db.relationship('UserTypeGym', back_populates="gym", foreign_keys=[UserTypeGym.gym_id])    # I hate Python
+User.gyms = db.relationship('UserTypeGym', back_populates="user", foreign_keys=[UserTypeGym.user_id])
+UserTypeGym.gym = db.relationship('Gym', back_populates="users", foreign_keys=[UserTypeGym.gym_id])

@@ -25,7 +25,7 @@ class GetNotifications(Resource):
         return returned_notifications, 200
 
 @notification_ns.route('/<int:id>')
-class ReadNotification(Resource):
+class GetNotification(Resource):
     @authorize
     def get(user: User, self, id):
         notification = next((notification for notification in user.notifications if notification.notification.id == id), None)
@@ -41,7 +41,7 @@ class ReadNotification(Resource):
             return {'message': 'Notification not found.'}, 404
 
 @notification_ns.route('/unread')
-class ReadNotification(Resource):
+class UnreadNotifications(Resource):
     @authorize
     def post(user: User, self):
         notification_ids = request.json.get('notifications')
