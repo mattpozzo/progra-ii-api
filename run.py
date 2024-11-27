@@ -13,4 +13,4 @@ if __name__ == '__main__':
     with app.app_context():
         muscles_seeder(db)
         exercises_seeder(db)
-    app.run()
+    app.run(debug=True)
