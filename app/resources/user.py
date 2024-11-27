@@ -5,6 +5,8 @@ from app.models import db
 from sqlalchemy.exc import IntegrityError
 import jwt
 import datetime
+
+from app.resources.auth.authorize import authorize
 # Crear un namespace para usuarios
 user_ns = Namespace('users', description='Operaciones relacionadas con usuarios')
 
@@ -13,11 +15,6 @@ user_ns = Namespace('users', description='Operaciones relacionadas con usuarios'
 # Clase para registrar usuario
 @user_ns.route('/register')
 class RegisterUser(Resource):
-    '''
-    curl -X POST http://127.0.0.1:5000/users/register \
-    -H "Content-Type: application/json" \
-    -d '{"first_name": "", "last_name": "", "email": "", "password": "", "certified": true}'
-    '''
     def post(self):
         data = request.get_json()
         new_user = User(
@@ -33,16 +30,10 @@ class RegisterUser(Resource):
             return new_user.serialize(), 201
         except IntegrityError:
             db.session.rollback()
-            return {'message': 'Error al registrar el usuario: email ya existe o datos invalidos'}, 400
+            return {'message': 'Error al registrar el usuario: email ya existe o datos invalidos.'}, 409
         
 @user_ns.route('/login')
 class LoginUser(Resource):
-    '''
-    curl -X POST http://127.0.0.1:5000/users/login \
-    -H "Content-Type: application/json" \
-    -d '{"email": "laura.martinez@example.com", "password": "securepassword123"}'
-    DEVUELVE UN TOKEN
-    '''
     def post(self):
         data = request.get_json()
         user = User.query.filter_by(email=data['email']).first()
@@ -53,31 +44,51 @@ class LoginUser(Resource):
             }, current_app.config['SECRET_KEY'], algorithm="HS256")
             return {'token': token}, 200
         else:
-            return {'message': 'Usuario o contraseña incorrectos'}, 401
+            return {'message': 'Usuario o contraseña incorrectos.'}, 401
 
-# Clase para obtener todos los usuarios (requiere token de autenticación)
 @user_ns.route('/')
 class GetUsers(Resource):
-    '''
-    curl -X GET http://127.0.0.1:5000/users/ \
-    -H "Authorization: Bearer <token>"
-    '''
-    def get(self):
-        auth_header = request.headers.get('Authorization')
-        if not auth_header:
-            return {'message': 'Token es requerido'}, 403
+    @authorize
+    def get(user: User, self):
+        gym_id = request.args.get('gym', type=int)
         
-        token_parts = auth_header.split()
-        if len(token_parts) != 2 or token_parts[0] != 'Bearer':
-            return {'message': 'Token formato invalido'}, 403
-        
-        token = token_parts[1]
+        # If gym is provided, filter by gym
+        cond = True
+        if gym_id is not None:
+            cond = User.gyms.any(id=gym_id)
 
-        try:
-            decoded_token = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=["HS256"])
-            users = User.query.all()
-            return [user.serialize() for user in users], 200
-        except jwt.ExpiredSignatureError:
-            return {'message': 'Token ha expirado, por favor ingresa nuevamente'}, 401
-        except jwt.InvalidTokenError:
-            return {'message': 'Token invalido'}, 401
+        users = User.query.filter(cond).all()
+        return [user.serialize() for user in users], 200
+
+@user_ns.route('/<int:id>')
+class GetUpdateUser(Resource):
+    @authorize
+    def get(user: User, self, id):
+        user = User.query.filter_by(id=id).first()
+        if user:
+
+            return user.serialize(), 200
+        else:
+            return {'message': 'User not found.'}, 404
+        
+    @authorize
+    def patch(user: User, self, id):
+        if user.id != id:
+            return {'message': 'No tienes permiso para modificar este usuario.'}, 403
+        
+        data = request.json
+        user.first_name = data.get('first_name', user.first_name)
+        user.last_name = data.get('last_name', user.last_name)
+
+        # Validates email
+        email = data.get('email', user.email)
+        if email != user.email:
+            repeated_email = User.query.filter(User.email == email).first()
+
+            if repeated_email:
+                return {'message': 'El email ingresado ya está tomado.'}, 409
+
+            user.email = email
+        
+        db.session.commit()
+        return user.serialize(), 200
