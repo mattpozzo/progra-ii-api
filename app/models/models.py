@@ -324,8 +324,7 @@ class RoutineExercise(db.Model, BaseAudit):
                                                  lazy=True),
                               foreign_keys=[session_id])
     routine = db.relationship('Routine',
-                              backref=db.backref('routine_exercises',
-                                                 lazy=True),
+                              back_populates='routine_exercises',
                               foreign_keys=[routine_id])
 
     def serialize(self):
@@ -335,9 +334,14 @@ class RoutineExercise(db.Model, BaseAudit):
             'reps': self.reps,
             'weight': self.weight,
             'exercise': self.exercise.serialize(),
-            'session': self.session.serialize() if self._session else None,
+            'session': self.session.serialize() if self.session else None,
             'routine': self.routine.serialize()
         }
+
+
+Routine.routine_exercises: Mapped[List['RoutineExercise']] = db.relationship('RoutineExercise',
+                                              back_populates='routine',
+                                              foreign_keys=[RoutineExercise.routine_id])
 
 
 class RoutineSchedule(db.Model, BaseAudit):
