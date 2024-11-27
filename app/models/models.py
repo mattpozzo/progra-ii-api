@@ -276,7 +276,9 @@ class Routine(db.Model, BaseAudit):
     __tablename__ = 'routine'
     id = db.Column(db.Integer, primary_key=True)
 
-    name = db.Column(db.String(128), nullable=False)
+    name = db.Column(db.String(128),
+                     nullable=False,
+                     unique=True)
     description = db.Column(db.String(512))
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
