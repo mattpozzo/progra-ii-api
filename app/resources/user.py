@@ -7,12 +7,10 @@ import jwt
 import datetime
 
 from app.resources.auth.authorize import authorize
-# Crear un namespace para usuarios
+
+
 user_ns = Namespace('users', description='Operaciones relacionadas con usuarios')
 
-
-
-# Clase para registrar usuario
 @user_ns.route('/register')
 class RegisterUser(Resource):
     def post(self):
@@ -55,7 +53,7 @@ class GetUsers(Resource):
         # If gym is provided, filter by gym
         cond = True
         if gym_id is not None:
-            cond = User.gyms.any(id=gym_id)
+            cond = User.gyms.any(gym_id=gym_id)
 
         users = User.query.filter(cond).all()
         return [user.serialize() for user in users], 200
