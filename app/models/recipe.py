@@ -3,7 +3,7 @@ from app.models.audit.base_audit import BaseAudit
 
 from . import db
 
-class Recipe(db.Model,BaseAudit):
+class Recipe(db.Model):
     __tablename__ = 'recipe'
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(255), nullable=False)

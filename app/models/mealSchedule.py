@@ -16,7 +16,7 @@ class MealSchedule(db.Model, BaseAudit):
 
 
 
-    def serialize(self,BaseAudit):
+    def serialize(self):
         return super().serialize() | {
             "unique_id": self.unique_id,
             "week_day": self.week_day,
