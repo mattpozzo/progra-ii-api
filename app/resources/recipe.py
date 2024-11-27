@@ -1,9 +1,7 @@
 from flask_restx import Namespace, Resource, fields
 from flask import request
 from app import db  
-from app.models.recipe import Recipe  
-from app.models.recipeIngredient import RecipeIngredient
-from app.models.ingredient import Ingredient
+from app.models.models import Recipe , RecipeIngredient, Ingredient 
 
 recipe_ns = Namespace('recipes', description='Operaciones relacionadas con recetas')
 

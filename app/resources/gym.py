@@ -1,9 +1,7 @@
 from flask_restx import Namespace, Resource
 from flask import request, current_app
 from app.models import db
-from app.models.gym import Gym
-from app.models.exercise import Exercise
-from app.models.muscle import Muscle
+from app.models.models import Gym, Exercise, Muscle
 import jwt
 
 gym_ns = Namespace('gyms', description='Operaciones relacionadas con los gimnasios')

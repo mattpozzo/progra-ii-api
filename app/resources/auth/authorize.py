@@ -2,7 +2,7 @@ from functools import wraps
 from flask import request, abort
 import jwt
 from app.config import Config
-from app.models.user import User
+from app.models.models import User
 
 
 def authorize(f):
