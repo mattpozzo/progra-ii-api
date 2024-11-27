@@ -112,6 +112,13 @@ class Notification(db.Model, BaseAudit):
 
     users: Mapped[List['NotificationUser']] = db.relationship(back_populates = 'notification', lazy = True)
 
+    # Envía la notificación a un conjunto de usuarios, TODO: ver si funciona
+    def send_to_users(self, users):
+        for user in users:
+            notification_user = NotificationUser(user = user, notification = self)
+            db.session.add(notification_user)
+        db.session.commit()
+
     def serialize(self):
         return super().serialize() | {
             "id": self.id,
@@ -403,6 +410,12 @@ class Trophy(db.Model, BaseAudit):
     name = db.Column(db.String(128), nullable=False, unique=True)
     description = db.Column(db.String(512), nullable=False)
 
+    # Entrega el trofeo a un usuario, TODO: ver si funciona
+    def grant(self, user):
+        user_trophy = UserTrophy(user=user, trophy=self)
+        db.session.add(user_trophy)
+        db.session.commit()
+
     def serialize(self):
         return super().serialize() | {
             "id": self.id,
@@ -437,24 +450,18 @@ class User(db.Model):
             "last_name": self.last_name,
             "email": self.email,
             "certified": self.certified,
-            # "notifications": [notification.serialize() for notification in
-            #                   self.notifications]
         }
 
 
 class UserTrophy(db.Model, BaseAudit):
     __tablename__ = 'user_trophy'
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    trophy_id = db.Column(db.Integer, db.ForeignKey('trophy.id'))
+    user_id = db.Column(db.ForeignKey('user.id'), primary_key=True)
+    trophy_id = db.Column(db.ForeignKey('trophy.id'), primary_key=True)
 
-    user = db.relationship('User',
-                           backref=db.backref('trophies'),
-                           lazy=True,
+    user: Mapped['User'] = db.relationship(back_populates='trophies',
                            foreign_keys=[user_id])
-    trophy = db.relationship('Trophy',
-                             backref=db.backref('users'),
-                             lazy=True)
+    trophy: Mapped['Trophy'] = db.relationship(back_populates='users',
+                             foreign_keys=[trophy_id])
 
     def serialize(self):
         return super().serialize() | {
@@ -462,6 +469,9 @@ class UserTrophy(db.Model, BaseAudit):
             "trophy": self.trophy.serialize(),
             "user": self.user.serialize()
         }
+
+Trophy.users = db.relationship('UserTrophy', back_populates='trophy', foreign_keys=[UserTrophy.trophy_id])
+User.trophies = db.relationship('UserTrophy', back_populates='user', foreign_keys=[UserTrophy.user_id])
 
 
 class UserType(db.Model, BaseAudit):
@@ -476,6 +486,8 @@ class UserType(db.Model, BaseAudit):
         }
 
 class UserTypeGym(db.Model, BaseAudit):
+    # OPINION: habría que sacar el id y hacer que las tres FK sean la PK compuesta,
+    # como en las otras tablas intermedias.
     __tablename__ = "usertypegym"
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
