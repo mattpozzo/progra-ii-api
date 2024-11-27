@@ -1,14 +1,14 @@
 from flask_restx import Namespace, Resource
-from app.models.models import Exercise
+from app.models.models import Muscle
 from app.models.models import User
 from app.resources.auth.authorize import authorize
 
-exercise_ns = Namespace('exercises', description='Operaciones relacionadas con los ejercicios')
+muscle_ns = Namespace('muscles', description='Operaciones relacionadas con los musculos')
 
 
-@exercise_ns.route('/')
-class GetExercises(Resource):
+@muscle_ns.route('/')
+class GetMuscles(Resource):
     @authorize
     def get(user: User, self):  # asco but ok?
-        exercises = Exercise.query.all()
+        exercises = Muscle.query.all()
         return [exercise.serialize() for exercise in exercises], 200
