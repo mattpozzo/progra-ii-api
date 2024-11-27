@@ -75,3 +75,30 @@ print(new_gym.json())
 print('\n\nPrueba UserType Otra Vez')
 gyms = get('http://127.0.0.1:5000/user_type_gyms/',headers=headersJson)
 print(gyms.json())
+
+print('\n\nPrueba de creacion de ingredientes')
+new_ingredient = post(
+    'http://127.0.0.1:5000/ingredients/',
+    headers=headersJson,
+    json={"name": "Tomate"}
+)
+print(new_ingredient.json())
+print("resultado correcto por elemento duplicado")
+
+
+print('\n\nPrueba de obtener todos los ingredientes')
+
+
+response = get('http://127.0.0.1:5000/ingredients/', headers=headersJson)
+
+print(response.json())
+
+
+if response.status_code == 200:
+    print('Ingredientes obtenidos exitosamente.')
+    if len(response.json()) == 0:
+        print('La lista de ingredientes está vacia.')
+    else:
+        print(f'Se encontraron {len(response.json())} ingredientes.')
+else:
+    print(f'Error al obtener ingredientes: {response.status_code}, {response.json()}')
