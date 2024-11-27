@@ -12,6 +12,9 @@ from .resources.recipe import recipe_ns
 from .resources.mealSchedule import meal_schedule_ns
 from .resources.trophy import trophy_ns
 
+from .resources.post import post_ns
+
+
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
@@ -28,6 +31,9 @@ def create_app():
     api.add_namespace(recipe_ns)
     api.add_namespace(meal_schedule_ns)
     api.add_namespace(trophy_ns)
+
+    api.add_namespace(post_ns)
+
 
     with app.app_context():
         db.create_all()
