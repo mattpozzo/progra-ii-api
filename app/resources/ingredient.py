@@ -1,7 +1,7 @@
 from flask_restx import Namespace, Resource
 from flask import request
 from app.models import db
-from app.models.ingredient import Ingredient
+from app.models.models import Ingredient
 
 # namespace
 ingredients_ns = Namespace('ingredients', description='Operaciones relacionadas con los ingredientes')
