@@ -11,7 +11,6 @@ from .resources.ingredient import ingredients_ns
 from .resources.recipe import recipe_ns
 from .resources.mealSchedule import meal_schedule_ns
 
-from .models._model import *
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
