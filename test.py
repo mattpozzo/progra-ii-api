@@ -102,3 +102,4 @@ if response.status_code == 200:
         print(f'Se encontraron {len(response.json())} ingredientes.')
 else:
     print(f'Error al obtener ingredientes: {response.status_code}, {response.json()}')
+
