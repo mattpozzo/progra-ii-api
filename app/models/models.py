@@ -450,6 +450,11 @@ class User(db.Model):
             "last_name": self.last_name,
             "email": self.email,
             "certified": self.certified,
+
+
+            # "notifications": [notification.serialize() for notification in
+            #                   self.notifications]
+
         }
 
 
