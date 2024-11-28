@@ -2,17 +2,17 @@ from requests import put, get, delete, post
 
 headersJson = {'Content-Type': 'application/json'}
 
-#probando que el token es necesario
+# probando que el token es necesario
 print('Probando que el token es necesario')
 get_users_test1 = get('http://127.0.0.1:5000/users/')
 print(get_users_test1.json())
 
 registro = post('http://127.0.0.1:5000/users/register',
                 headers=headersJson,
-                json={"first_name": "Marcelo", 
-                      "last_name": "Ulrich", 
-                      "email": "mulrich@estudiantes.unsam.edu.ar", 
-                      "password": "pass123", 
+                json={"first_name": "Marcelo",
+                      "last_name": "Ulrich",
+                      "email": "mulrich@estudiantes.unsam.edu.ar",
+                      "password": "pass123",
                       "certified": False})
 
 print('\n\nProbando registro...')

@@ -11,9 +11,10 @@ from .resources.ingredient import ingredients_ns
 from .resources.recipe import recipe_ns
 from .resources.mealSchedule import meal_schedule_ns
 from .resources.trophy import trophy_ns
-
 from .resources.post import post_ns
-
+from .resources.exercise import exercise_ns
+from .resources.muscles import muscle_ns
+from .resources.routine import routine_ns
 
 def create_app():
     app = Flask(__name__)
@@ -31,9 +32,10 @@ def create_app():
     api.add_namespace(recipe_ns)
     api.add_namespace(meal_schedule_ns)
     api.add_namespace(trophy_ns)
-
     api.add_namespace(post_ns)
-
+    api.add_namespace(exercise_ns)
+    api.add_namespace(muscle_ns)
+    api.add_namespace(routine_ns)
 
     with app.app_context():
         db.create_all()
