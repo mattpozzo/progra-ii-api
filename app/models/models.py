@@ -77,6 +77,12 @@ class Ingredient(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), nullable=False, unique=True)
 
+    def serialize(self):
+        return {
+            'id': self.id,
+            'name': self.name
+        }
+
 
 class MealSchedule(db.Model):
     __tablename__ = 'meal_schedule'
@@ -90,6 +96,19 @@ class MealSchedule(db.Model):
 
     recipe = db.relationship('Recipe', backref=db.backref('meal_schedules',
                                                           lazy=True))
+    
+
+    def serialize(self):
+        
+        return {
+            'unique_id': self.unique_id,
+            'week_day': self.week_day,
+            'hour': str(self.hour),  # Convertimos el objeto Time a string
+            'training_plan_id': self.training_plan_id,
+            'recipe_id': self.recipe_id,
+            'recipe': self.recipe.title if self.recipe else None  # Incluye el título de la receta asociada si existe
+        }
+
 
 
 class Muscle(db.Model, BaseAudit):
@@ -174,30 +193,56 @@ class Post(db.Model, BaseAudit):
         }
 
 
-class Recipe(db.Model):
+class Recipe(db.Model, BaseAudit):
     __tablename__ = 'recipe'
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(255), nullable=False)
     description = db.Column(db.Text, nullable=True)
     body = db.Column(db.Text, nullable=True)
-    author = db.Column(db.Integer, nullable=True)  # FALTA ForeignKey
+    author = db.Column(db.String(255), nullable=True)
+
+    # Relación con los ingredientes
+    recipe_ingredients = db.relationship('RecipeIngredient', back_populates='parent_recipe', lazy=True)
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "title": self.title,
+            "description": self.description,
+            "body": self.body,
+            "author": self.author,
+            "ingredients": [
+                {
+                    "ingredient_id": ri.ingredient.id,
+                    "ingredient_name": ri.ingredient.name,
+                    "quantity": ri.quantity
+                }
+                for ri in self.recipe_ingredients
+            ]
+        }
+
+
 
 
 class RecipeIngredient(db.Model):
     __tablename__ = 'recipe_ingredient'
     id = db.Column(db.Integer, primary_key=True)
-    recipe_id = db.Column(db.Integer,
-                          db.ForeignKey('recipe.id'),
-                          nullable=False)
-    ingredient_id = db.Column(db.Integer,
-                              db.ForeignKey('ingredient.id'),
-                              nullable=False)
-    quantity = db.Column(db.String(50), nullable=False)
+    recipe_id = db.Column(db.Integer, db.ForeignKey('recipe.id'), nullable=False)
+    ingredient_id = db.Column(db.Integer, db.ForeignKey('ingredient.id'), nullable=False)
+    quantity = db.Column(db.String(255), nullable=False)
 
-    recipe = db.relationship('Recipe', backref=db.backref('ingredients',
-                                                          lazy=True))
-    ingredient = db.relationship('Ingredient', backref=db.backref('recipes',
-                                                                  lazy=True))
+    # Relación inversa a la receta
+    parent_recipe = db.relationship('Recipe', back_populates='recipe_ingredients')
+    ingredient = db.relationship('Ingredient')
+
+    def serialize(self):
+        return {
+            "ingredient_id": self.ingredient.id,
+            "ingredient_name": self.ingredient.name,
+            "quantity": self.quantity
+        }
+
+                                                                  
     
 
 
