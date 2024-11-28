@@ -249,7 +249,7 @@ class RecipeIngredient(db.Model):
 class Review(db.Model):
     __tablename__ = 'review'
 
-    UniqueID = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    ID = db.Column(db.Integer, primary_key=True, autoincrement=True)
     score = db.Column(db.Integer, nullable=False)
     comment = db.Column(db.String(500), nullable=True)
     recipe_id = db.Column(db.Integer, db.ForeignKey('recipe.id'), nullable=True)
@@ -264,7 +264,7 @@ class Review(db.Model):
 
     def serialize(self):
         return {
-            'UniqueID': self.UniqueID,
+            'ID': self.ID,
             'score': self.score,
             'comment': self.comment,
             'recipe_id': self.recipe_id,

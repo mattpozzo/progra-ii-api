@@ -9,7 +9,7 @@ review_ns = Namespace('reviews', description='Operaciones relacionadas con rese�
 
 # Modelo para la reseña (para la documentación de la API)
 review_model = review_ns.model('Review', {
-    'UniqueID': fields.Integer(readonly=True, description='El ID único de la reseña'),
+    'ID': fields.Integer(readonly=True, description='El ID único de la reseña'),
     'score': fields.Integer(required=True, description='La calificación de la receta'),
     'comment': fields.String(description='Comentario sobre la receta'),
     'recipe_id': fields.Integer(required=True, description='ID de la receta asociada'),
@@ -111,7 +111,7 @@ class ReviewGymResource(Resource):
         return review.serialize(), 201
     
 
-#GET PARA RECETAS POR GIMNASIO Y USUARIO
+#GET PARA REVIEW POR GIMNASIO Y USUARIO
 @review_ns.route('/')
 class ReviewListResource(Resource):
     @review_ns.doc('get_reviews')
@@ -140,11 +140,11 @@ class ReviewListResource(Resource):
 
 
 
-
+# PATCH PARA ACTUALIZAR UNA REVIEW
 @review_ns.route('/<int:id>')
 class ReviewResource(Resource):
     @review_ns.doc('update_review')
-    @review_ns.expect(review_model)  # Asegúrate de que review_model esté definido correctamente
+    @review_ns.expect(review_model)  
     def patch(self, id):
         """
         Actualizar una reseña por su ID.
@@ -160,7 +160,7 @@ class ReviewResource(Resource):
         if not review:
             return {'message': 'Review not found'}, 404
 
-        # Actualizar los campos
+        
         if score is not None:
             review.score = score
         if comment:
@@ -172,14 +172,14 @@ class ReviewResource(Resource):
 
 
 
-
+#ELIMINAR UNA REVIEW
 @review_ns.route('/')
 class ReviewListResource(Resource):
     @review_ns.doc('get_all_reviews')
     def get(self):
         """
         Obtener todas las reseñas.
-        curl -X GET http://localhost:5000/review/
+        curl -X GET http://localhost:5000/reviews/
         """
         reviews = Review.query.all()
 
