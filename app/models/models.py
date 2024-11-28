@@ -55,6 +55,8 @@ class Exercise(db.Model, BaseAudit):
             "muscle": self.muscle.serialize()
         }
 
+# Muscle.exercises abajo de Muscle
+
 
 class Gym(db.Model, BaseAudit):
     __tablename__ = "gym"
@@ -102,6 +104,9 @@ class Muscle(db.Model, BaseAudit):
             "name": self.name,
             "description": self.description
         }
+
+
+# Muscle.exercises = db.relationship('Exercise', back_populates="muscle", foreign_keys=[Exercise.id])
 
 
 class Notification(db.Model, BaseAudit):
@@ -271,7 +276,9 @@ class Routine(db.Model, BaseAudit):
     __tablename__ = 'routine'
     id = db.Column(db.Integer, primary_key=True)
 
-    name = db.Column(db.String(128), nullable=False)
+    name = db.Column(db.String(128),
+                     nullable=False,
+                     unique=True)
     description = db.Column(db.String(512))
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -317,8 +324,7 @@ class RoutineExercise(db.Model, BaseAudit):
                                                  lazy=True),
                               foreign_keys=[session_id])
     routine = db.relationship('Routine',
-                              backref=db.backref('routine_exercises',
-                                                 lazy=True),
+                              back_populates='routine_exercises',
                               foreign_keys=[routine_id])
 
     def serialize(self):
@@ -328,9 +334,14 @@ class RoutineExercise(db.Model, BaseAudit):
             'reps': self.reps,
             'weight': self.weight,
             'exercise': self.exercise.serialize(),
-            'session': self.session.serialize() if self._session else None,
+            'session': self.session.serialize() if self.session else None,
             'routine': self.routine.serialize()
         }
+
+
+Routine.routine_exercises: Mapped[List['RoutineExercise']] = db.relationship('RoutineExercise',
+                                              back_populates='routine',
+                                              foreign_keys=[RoutineExercise.routine_id])
 
 
 class RoutineSchedule(db.Model, BaseAudit):
