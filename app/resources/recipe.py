@@ -90,7 +90,7 @@ class RecipeResource(Resource):
 
 
 
-# Crear una nueva receta (POST)
+# AGREGA INGREDIENTES A UNA RECETA
 @recipe_ns.route('/<int:recipe_id>/ingredients')
 class RecipeIngredientResource(Resource):
     def post(self, recipe_id):
@@ -138,30 +138,73 @@ class RecipeIngredientResource(Resource):
 
 
 
-
-
-
-
-# Obtener todas las recetas (GET)
+#GET OBTIENE TODAS LAS RECETAS
 @recipe_ns.route('/')
 class RecipeListResource(Resource):
-    @authorize  
-    @recipe_ns.doc('get_recipes') 
-    @recipe_ns.marshal_list_with(recipe_model) 
-    def get(self, user: User):
-        '''Obtener todas las recetas
-        curl -X GET http://localhost:5000/recipes/ \
-        -H "Authorization: Bearer <tu_token_jwt>"
-        '''
+    @recipe_ns.doc('get_all_recipes')
+    def get(self):
+        """
+        Obtener todas las recetas.
+        curl -X GET http://localhost:5000/recipes/
+        """
         
+        # Recupera todas las recetas de la base de datos
         recipes = Recipe.query.all()
 
+        # Verifica si hay recetas
+        if not recipes:
+            return {'message': 'No recipes found'}, 404
+
+        # Serializa las recetas y las devuelve en la respuesta
+        return [recipe.serialize() for recipe in recipes], 200
+
+
+#MODIFICA UNA RECETA CON PATH
+@recipe_ns.route('/<int:id>')
+class RecipeResource(Resource):
+    @recipe_ns.doc('update_recipe')
+    @recipe_ns.expect(recipe_model)
+    def patch(self, id):
+        """
+        Actualizar parcialmente una receta existente.
+        curl -X PATCH http://localhost:5000/recipes/1 \
+        -H "Content-Type: application/json" \
+        -d '{"name": "Nuevo nombre de receta", "description": "Descripcion actualizada", "body": "Nuevo cuerpo de la receta", "ingredients": [{"id": 1, "quantity": "200g"}]}'
+        """
         
-        return recipes, 200
+        data = request.get_json()
+
+        recipe = Recipe.query.get(id)
+        if not recipe:
+            return {'message': 'Recipe not found'}, 404
+
+        # Actualizar los campos de la receta
+        if 'name' in data:
+            recipe.name = data['name']
+        if 'description' in data:
+            recipe.description = data['description']
+        if 'body' in data:
+            recipe.body = data['body']
+
+        # Actualizar los ingredientes (si es necesario)
+        if 'ingredients' in data:
+            for ingredient_data in data['ingredients']:
+                ingredient = RecipeIngredient.query.get(ingredient_data['id'])
+                if ingredient:
+                    ingredient.quantity = ingredient_data['quantity']  # Actualiza la cantidad del ingrediente
+                else:
+                    # Si el ingrediente no existe, lo puedes manejar según lo desees
+                    pass
+
+        db.session.commit()
+
+        return recipe.serialize(), 200
 
 
 
-    
+
+
+#OBTIENE UNA RECETA POR EL ID   
 @recipe_ns.route('/<int:recipe_id>')
 class RecipeDetailResource(Resource):
     @authorize
@@ -199,3 +242,39 @@ class RecipeDetailResource(Resource):
         }
 
         return recipe_data, 200
+
+
+
+
+#ELIMINA UNA RECETA
+@recipe_ns.route('/<int:id>')
+class RecipeResource(Resource):
+    @recipe_ns.doc('delete_recipe')
+    def delete(self, id):
+        """
+        Eliminar una receta por ID.
+        curl -X DELETE http://localhost:5000/recipes/<id> \
+        -H "Authorization: Bearer <tu_token_jwt>"
+        """
+        # Obtén la receta que deseas eliminar
+        recipe = Recipe.query.get(id)
+        
+        if not recipe:
+            return {'message': 'Recipe not found'}, 404
+        
+        # Elimina los ingredientes relacionados con la receta
+        # Si es necesario, usa delete() o establece recipe_id a None
+        recipe_ingredients = RecipeIngredient.query.filter_by(recipe_id=id).all()
+        
+        for ingredient in recipe_ingredients:
+            db.session.delete(ingredient)  # o ingredient.recipe_id = None si prefieres mantener los ingredientes
+
+        # Ahora elimina la receta
+        db.session.delete(recipe)
+        db.session.commit()
+
+        return {'message': 'Recipe deleted successfully'}, 200
+
+
+
+ 
