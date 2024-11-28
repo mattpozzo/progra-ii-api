@@ -331,9 +331,9 @@ class RoutineExercise(db.Model, BaseAudit):
             'sets': self.sets,
             'reps': self.reps,
             'weight': self.weight,
-            'exercise': self.exercise.serialize(),
-            'session': self.session.serialize() if self.session else None,
-            'routine': self.routine.serialize()
+            'exercise': self.exercise.id,
+            'session': self.session.id,
+            'routine': self.routine.id
         }
 
 
@@ -381,7 +381,7 @@ class Session(db.Model, BaseAudit):
     def serialize(self):
         return super().serialize() | {
             "id": self.id,
-            "date": self.created_at,
+            "date": str(self.created_at),
             "duration": self.duration,
             'user': self.user.serialize()
         }

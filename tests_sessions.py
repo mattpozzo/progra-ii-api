@@ -12,9 +12,9 @@ response_get = get('http://127.0.0.1:5000/exercises/',
                    headers=headersJson,
                    params={'muscle': 4})
 
-ejercicio_pecho = response_get.json()[0]
+ejercicio_pecho_og = response_get.json()[0]
 
-pprint.pprint(ejercicio_pecho)
+pprint.pprint(ejercicio_pecho_og)
 
 response_get = get('http://127.0.0.1:5000/exercises/',
                    headers=headersJson,
@@ -26,7 +26,7 @@ pprint.pprint(ejercicio_tricep_og)
 
 #Armo los routine exercises
 
-ejercicio_pecho = {"exercise_id": ejercicio_pecho["id"],
+ejercicio_pecho = {"exercise_id": ejercicio_pecho_og["id"],
                    'sets': 3,
                    'reps': 12,
                    'weight': 20,
@@ -51,7 +51,24 @@ pprint.pprint(response_get.json(), sort_dicts=False)
 
 
 print('Test Train')
-response_get = post('http://127.0.0.1:5000/routine/1/train', headers=headersJson)
+response_get = post('http://127.0.0.1:5000/routine/1/train/', headers=headersJson)
+pprint.pprint(response_get.json(), sort_dicts=False)
+
+ejercicio_pecho = {"exercise_id": ejercicio_pecho_og["id"],
+                   'sets': 4,
+                   'reps': 15,
+                   'weight': 15,
+                   'notes': "Hacer hasta fallo!"}
+
+ejercicio_tricep = {"exercise_id": ejercicio_tricep_og["id"],
+                    'sets': 2,
+                    'reps': 20,
+                    'weight': 15}
+
+json={"routine_exercises": [ejercicio_pecho, ejercicio_tricep]}
+
+print('Test Train')
+response_get = post('http://127.0.0.1:5000/routine/1/train/', headers=headersJson, json={json})
 pprint.pprint(response_get.json(), sort_dicts=False)
 
 
