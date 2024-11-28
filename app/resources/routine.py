@@ -1,6 +1,6 @@
 from flask_restx import Namespace, Resource
 from flask import request
-from app.models.models import Routine, RoutineExercise, RoutineSchedule
+from app.models.models import Routine, RoutineExercise, RoutineSchedule, Session
 from app.models.models import User
 from app.resources.auth.authorize import authorize
 from app.models import db
@@ -177,3 +177,75 @@ class GetTemplateRoutines(Resource):
 
         # Serialize and return results
         return [routine.serialize() for routine in routines], 200
+
+
+@routine_ns.route('/<int:id>/train')
+class PostRoutineSession(Resource):
+
+    @authorize
+    def post(user: User, self, id):
+
+        session = Session.query.filter_by(user_id=user.id, duration=None, active=True).first()
+
+        if session is None:
+            # Sin ongiong, crear
+            session = Session(
+                user_id=user.id,
+                created_by=user.id
+            )
+
+            db.session.add(session)
+            db.session.flush()
+
+            routine = Routine.query.filter_by(user_id=user.id,id=id).first()
+            templates = routine.routine_exercises
+
+            for template in templates:
+
+                new_rtex = RoutineExercise(
+                    sets=template.sets,
+                    reps=template.reps,
+                    weight=template.weight,
+                    exercise_id=template.exercise_id,
+                    notes=template.notes,
+                    routine_id=template.routine_id,
+                    created_by=user.id,
+                    session_id=session.id
+                )
+
+                db.session.add(new_rtex)
+        
+        else:
+            routines = Routine.query.filter_by(user_id=user.id, active=True)
+            query = routines.join(RoutineExercise).filter(
+                RoutineExercise.session_id == session.id
+                )
+            
+            if query is None:
+                #user is currently training with a different routine!
+                return {'message': 'ERROR: user is already training with different routine!'}
+            query.all()
+            data = request.get_json()
+
+            if data is None:
+                return {'message': 'ERROR: trying to end a session without providing the exercises made!'}
+            
+            rtex_dict = dict()
+
+            # for exercise in data['routine_exercises']:
+            #     rtex_dict[exercise['id']]
+                #la idea es, a partir de rtex en json, hacer dict id: rtex.
+                #con ese dict, itero sobre query (son los rtex creados anteriormente)
+                #que si tienen session id, y los modifico en función de su id.
+
+
+
+        # Fetch filtered routines
+        routines = query.all()
+
+
+
+
+        db.session.commit()
+
+        return str(template), 201

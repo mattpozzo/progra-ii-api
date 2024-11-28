@@ -1,6 +1,6 @@
 from typing import List
 
-from sqlalchemy import DateTime, Time
+from sqlalchemy import DateTime, Time, func
 from app.models import db
 from app.models.audit.base_audit import BaseAudit
 from sqlalchemy.orm import Mapped
@@ -285,8 +285,7 @@ class Routine(db.Model, BaseAudit):
     gym_id = db.Column(db.Integer, db.ForeignKey('gym.id'))
 
     user = db.relationship('User',
-                           backref=db.backref('routines',
-                                              lazy=True),
+                           back_populates='routines',
                            foreign_keys=[user_id])
     gym = db.relationship('Gym',
                           backref=db.backref('routines',
@@ -305,14 +304,15 @@ class Routine(db.Model, BaseAudit):
 
 class RoutineExercise(db.Model, BaseAudit):
     __tablename__ = 'routine_exercise'
+    id = db.Column(db.Integer, primary_key=True)
     sets = db.Column(db.Integer, nullable=False)
     reps = db.Column(db.Integer, nullable=False)
     weight = db.Column(db.Integer, nullable=False)
-    exercise_id = db.Column(db.Integer, db.ForeignKey('exercise.id'), primary_key=True, nullable=False)
+    exercise_id = db.Column(db.Integer, db.ForeignKey('exercise.id'), nullable=False)
     notes = db.Column(db.String(512))
     session_id = db.Column(db.Integer, db.ForeignKey('session.id'),
                            nullable=True)
-    routine_id = db.Column(db.Integer, db.ForeignKey('routine.id'), primary_key=True, nullable=False) #OJO, así es mejor delete logico
+    routine_id = db.Column(db.Integer, db.ForeignKey('routine.id'), nullable=False) #OJO, así es mejor delete logico
 
     exercise = db.relationship('Exercise',
                                backref=db.backref('routine_exercises',
@@ -372,17 +372,16 @@ class RoutineSchedule(db.Model, BaseAudit):
 class Session(db.Model, BaseAudit):
     __tablename__ = 'session'
     id = db.Column(db.Integer, primary_key=True)
-    date = db.Column(DateTime(timezone=True), nullable=False)
-    duration = db.Column(db.Interval, nullable=False)
+    duration = db.Column(db.Interval)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
-    user = db.relationship('User', backref=db.backref('sessions', lazy=True),
+    user = db.relationship('User', back_populates='sessions',
                            foreign_keys=[user_id])
 
     def serialize(self):
         return super().serialize() | {
             "id": self.id,
-            "date": self.date,
+            "date": self.created_at,
             "duration": self.duration,
             'user': self.user.serialize()
         }
@@ -450,6 +449,12 @@ class User(db.Model):
     certified = db.Column(db.Boolean, nullable=False)
 
     notifications: Mapped[List['NotificationUser']] = db.relationship(back_populates="user", foreign_keys=[NotificationUser.user_id])
+    sessions: Mapped[List['Session']] = db.relationship('Session',
+                                                        back_populates='user',
+                                                        foreign_keys=[Session.user_id])
+    routines: Mapped[List['Routine']] = db.relationship('Routine',
+                                                        back_populates='user',
+                                                        foreign_keys=[Routine.user_id])
 
     def set_password(self, password):
         self.salt = os.urandom(16).hex()
