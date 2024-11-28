@@ -42,9 +42,9 @@ class RegisterUser(Resource):
 class LoginUser(Resource):
     def post(self):
         '''
-    curl -X POST http://localhost:5000/users/login \
-    -H "Content-Type: application/json" \
-    -d '{"email": "hola@a.com", "password": "asd"}' DEVUELVE TOKEN
+        curl -X POST http://localhost:5000/users/login \
+        -H "Content-Type: application/json" \
+        -d '{"email": "hola@a.com", "password": "asd"}' DEVUELVE TOKEN
 
     '''
         data = request.get_json()
