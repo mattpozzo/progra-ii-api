@@ -9,12 +9,14 @@ def exercises_rows() -> list[dict]:
 
 def exercises_seeder(db):
     from app.models.models import Exercise
-    rows = exercises_rows()
-    for row in rows:
-        muscle = 0
-        muscle = Exercise(**row)
-        db.session.add(muscle)
-    db.session.commit()
+
+    if Exercise.query.first() is None:
+        rows = exercises_rows()
+        for row in rows:
+            muscle = 0
+            muscle = Exercise(**row)
+            db.session.add(muscle)
+        db.session.commit()
 
 
 if __name__ == '__main__':
