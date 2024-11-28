@@ -16,9 +16,8 @@ class GetRoutines(Resource):
     '''Devuelve lista de rutinas asociadas al usuario que lo pide'''
     @authorize
     def get(user: User, self):
-        cond = Routine.user_id == user.id
 
-        routines = Routine.query.filter(cond).all()
+        routines = Routine.query.filter_by(user_id=user.id, active=True).all()
         return [routine.serialize() for routine in routines], 200
 
 
@@ -27,7 +26,7 @@ class GetUpdateDeleteRoutine(Resource):
     '''Devuelve rutina dado id, si pertenece al usuario'''
     @authorize
     def get(user: User, self,  id):
-        routine = Routine.query.filter_by(id=id, user_id=user.id).first()
+        routine = Routine.query.filter_by(id=id, user_id=user.id, active=True).first()
 
         if not routine:
             return {'message': 'Routine not found or not authorized to access this resource.'}, 404
@@ -36,7 +35,7 @@ class GetUpdateDeleteRoutine(Resource):
 
     @authorize
     def patch(user: User, self,  id):
-        routine = Routine.query.filter_by(id=id, user_id=user.id).first()
+        routine = Routine.query.filter_by(id=id, user_id=user.id, active=True).first()
 
         if not routine:
             return {'message': 'Routine not found or not authorized to access this resource.'}, 404
@@ -45,7 +44,33 @@ class GetUpdateDeleteRoutine(Resource):
 
         routine.name = data.get('name', routine.name)
         routine.description = data.get('description', routine.description)
-        # ver que hacer con los routine exercise!!
+        routine.updated_by = user.id
+
+        if data.get('routine_exercises') is not None:
+            incoming_exercises = data['routine_exercises']
+            rtexisting_exercises = {rtexercise.exercise_id: rtexercise for rtexercise in routine.routine_exercises}
+
+            for exercise_data in incoming_exercises:
+                if 'exercise_id' in exercise_data and exercise_data['exercise_id'] in rtexisting_exercises:
+                    # Actualizar ejercicio existente
+                    exercise = rtexisting_exercises[exercise_data['exercise_id']]
+                    exercise.sets = exercise_data.get('sets', exercise.sets)
+                    exercise.reps = exercise_data.get('reps', exercise.reps)
+                    exercise.weight = exercise_data.get('weight', exercise.weight)
+                    exercise.notes = exercise_data.get('notes', exercise.notes)
+                    exercise.updated_by = user.id
+                else:
+                    # Crear nuevo ejercicio
+                    new_exercise = RoutineExercise(
+                        sets=exercise_data['sets'],
+                        reps=exercise_data['reps'],
+                        weight=exercise_data['weight'],
+                        notes=exercise_data.get('notes'),
+                        exercise_id=exercise_data['exercise_id'],
+                        routine_id=routine.id,
+                        created_by=user.id
+                    )
+                    db.session.add(new_exercise)
 
         db.session.commit()
 
@@ -53,12 +78,13 @@ class GetUpdateDeleteRoutine(Resource):
 
     @authorize
     def delete(user: User, self,  id):
-        routine = Routine.query.filter_by(id=id, user_id=user.id).first()
+        routine = Routine.query.filter_by(id=id, user_id=user.id, active=True).first()
 
         if not routine:
             return {'message': 'Routine not found or not authorized to access this resource.'}, 404
 
-        db.session.delete(routine)
+        routine.active = False
+        routine.updated_by = user.id
 
         db.session.commit()
 
@@ -91,7 +117,8 @@ class PostRoutine(Resource):
                 weight=exercise_data['weight'],
                 exercise_id=exercise_data['exercise_id'],
                 notes=exercise_data.get('notes'),
-                routine_id=new_routine.id
+                routine_id=new_routine.id,
+                created_by=user.id
             )
             db.session.add(new_exercise)
 
