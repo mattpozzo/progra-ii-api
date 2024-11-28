@@ -193,6 +193,35 @@ class RecipeIngredient(db.Model):
                                                           lazy=True))
     ingredient = db.relationship('Ingredient', backref=db.backref('recipes',
                                                                   lazy=True))
+    
+
+
+class Review(db.Model):
+    __tablename__ = 'review'
+
+    UniqueID = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    score = db.Column(db.Integer, nullable=False)
+    comment = db.Column(db.String(500), nullable=True)
+    recipe_id = db.Column(db.Integer, db.ForeignKey('recipe.id'), nullable=True)
+    gym_id = db.Column(db.Integer, db.ForeignKey('gym.id'), nullable=True)
+
+    # Relación con Recipe
+    recipe = db.relationship('Recipe', backref='reviews', lazy=True)
+
+    # Relación con Gym (si es necesario)
+    gym = db.relationship('Gym', backref='reviews', lazy=True)
+
+
+    def serialize(self):
+        return super().serialize() | {
+            'UniqueID': self.UniqueID,
+            'score': self.score,
+            'comment': self.comment,
+            'recipe_id': self.recipe_id,
+            'gym_id': self.gym_id,
+            'recipe': self.recipe.serialize() if self.recipe else None,  # Suponiendo que Recipe tenga su propio método serialize
+            'gym': self.gym.serialize() if self.gym else None  # Suponiendo que Gym tenga su propio método serialize
+        }
 
 
 class Request(db.Model, BaseAudit):

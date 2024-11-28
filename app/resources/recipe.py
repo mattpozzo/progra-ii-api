@@ -2,7 +2,7 @@ from flask_restx import Namespace, Resource, fields
 from flask import request
 from app import db  
 from app.models.models import Recipe , RecipeIngredient, Ingredient 
-from app.models.user import User
+from app.models.models import User
 from app.resources.auth.authorize import authorize
 recipe_ns = Namespace('recipes', description='Operaciones relacionadas con recetas')
 

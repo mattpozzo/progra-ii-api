@@ -30,12 +30,12 @@ class MealScheduleListResource(Resource):
         training_plan = data.get('training_plan')
         recipe_id = data.get('recipe_id')
 
-        # Validación
+        
         recipe = Recipe.query.get(recipe_id)
         if not recipe:
             return {'message': 'Recipe not found'}, 404
 
-        # Crear el MealSchedule
+       
         meal_schedule = MealSchedule(
             week_day=week_day,
             hour=hour,
@@ -55,5 +55,5 @@ class MealScheduleListResource(Resource):
 
     @meal_schedule_ns.marshal_list_with(meal_schedule_model)
     def get(self):
-        meal_schedules = MealSchedule.query.all()  # Obtener todos los horarios de comida
-        return meal_schedules  # `marshal_list_with` se encarga de serializar
+        meal_schedules = MealSchedule.query.all()  
+        return meal_schedules  

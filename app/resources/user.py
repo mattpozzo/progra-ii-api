@@ -22,6 +22,12 @@ user_ns = Namespace('users', description='Operaciones relacionadas con usuarios'
 
 @user_ns.route('/register')
 class RegisterUser(Resource):
+    '''
+    curl -X POST http://localhost:5000/users/register \
+    -H "Content-Type: application/json" \
+    -d '{"first_name": "hola", "last_name": "hola", "email": "hola@a.com", "password": "asd", "certified": true}'
+
+    '''
     def post(self):
         data = request.get_json()
         new_user = User(
@@ -42,6 +48,12 @@ class RegisterUser(Resource):
 @user_ns.route('/login')
 class LoginUser(Resource):
     def post(self):
+        '''
+    curl -X POST http://localhost:5000/users/login \
+    -H "Content-Type: application/json" \
+    -d '{"email": "hola@a.com", "password": "asd"}' DEVUELVE TOKEN
+
+    '''
         data = request.get_json()
         user = User.query.filter_by(email=data['email']).first()
         if user and user.check_password(data['password']):
