@@ -197,7 +197,7 @@ class PostRoutineSession(Resource):
             db.session.add(session)
             db.session.flush()
 
-            routine = Routine.query.filter_by(user_id=user.id,id=id).first()
+            routine = Routine.query.filter_by(user_id=user.id, id=id).first()
             templates = routine.routine_exercises
 
             res = []
@@ -224,15 +224,15 @@ class PostRoutineSession(Resource):
             return {'templates': [re.serialize() for re in res]}, 201
         
         else:
-            routines = Routine.query.filter_by(user_id=user.id, active=True)
-            query = routines.join(RoutineExercise).filter(
+            # routine = Routine.query.filter_by(user_id=user.id, active=True).first()
+            query = RoutineExercise.query.filter(
                 RoutineExercise.session_id == session.id
-                )
+                ).all()
             
-            if query is None:
+            if not query:
                 #user is currently training with a different routine!
                 return {'message': 'ERROR: user is already training with different routine!'}
-            query.all()
+            
             data = request.get_json()
 
             if data is None:
@@ -244,12 +244,16 @@ class PostRoutineSession(Resource):
                 #la idea es, a partir de rtex en json, hacer dict id: rtex.
                 #con ese dict, itero sobre query (son los rtex creados anteriormente)
                 #que si tienen session id, y los modifico en función de su id.
-                rtex_dict[exercise['id']] = exercise
+                rtex_dict[exercise['exercise_id']] = exercise
+
+            rtex_list_og = []
+            for rtex in query:
+                rtex_list_og.append(rtex.serialize())
 
             db.session.commit()
 
             return {'rtexdict': rtex_dict,
-                    'query': query}, 201
+                    'query': str(rtex_list_og)}, 201
     
 
 
