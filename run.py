@@ -5,12 +5,13 @@ from app.utils.muscles import muscles_seeder
 from app.utils.exercises import exercises_seeder
 
 #delete_all()  # keep while testing
+# delete_all()  # keep while testing
 load_dotenv()
 
 app, db = create_app()
 
 if __name__ == '__main__':
-    #with app.app_context():
-       # muscles_seeder(db)
-       # exercises_seeder(db)
-    app.run(debug=True)
+    # with app.app_context():
+    #     muscles_seeder(db)
+    #     exercises_seeder(db)
+    app.run()

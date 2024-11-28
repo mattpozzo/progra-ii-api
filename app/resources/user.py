@@ -9,9 +9,7 @@ import datetime
 from app.resources.auth.authorize import authorize
 
 
-# Crear un namespace para usuarios
 user_ns = Namespace('users', description='Operaciones relacionadas con usuarios')
-
 
 @user_ns.route('/register')
 class RegisterUser(Resource):
@@ -63,8 +61,7 @@ class GetUsers(Resource):
     @authorize
     def get(user: User, self):
         gym_id = request.args.get('gym', type=int)
-
-
+        
         # If gym is provided, filter by gym
         cond = True
         if gym_id is not None:
@@ -89,7 +86,6 @@ class GetUpdateUser(Resource):
         if user.id != id:
             return {'message': 'No tienes permiso para modificar este usuario.'}, 403
         
-
         data = request.json
         user.first_name = data.get('first_name', user.first_name)
         user.last_name = data.get('last_name', user.last_name)
