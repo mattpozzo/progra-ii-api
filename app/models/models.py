@@ -355,7 +355,7 @@ class RoutineExercise(db.Model, BaseAudit):
             'reps': self.reps,
             'weight': self.weight,
             'exercise': self.exercise.id,
-            'session': self.session.id,
+            'session': self.session_id,
             'routine': self.routine.id
         }
 
