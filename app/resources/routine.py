@@ -5,6 +5,7 @@ from app.models.models import User
 from app.resources.auth.authorize import authorize
 from app.models import db
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import DateTime, func
 
 routine_ns = Namespace('routine',
                        description=('Operaciones relacionadas '
@@ -199,6 +200,7 @@ class PostRoutineSession(Resource):
 
             routine = Routine.query.filter_by(user_id=user.id, id=id).first()
             templates = routine.routine_exercises
+            templates = RoutineExercise.query.filter_by(created_by=user.id, routine_id=id, session_id=None)
 
             res = []
 
@@ -221,7 +223,7 @@ class PostRoutineSession(Resource):
 
             db.session.commit()
 
-            return {'templates': [re.serialize() for re in res]}, 201
+            return {'exercises_done': [re.serialize() for re in res]}, 201
         
         else:
             # routine = Routine.query.filter_by(user_id=user.id, active=True).first()
@@ -235,7 +237,7 @@ class PostRoutineSession(Resource):
             
             data = request.get_json()
 
-            if data is None:
+            if not data:
                 return {'message': 'ERROR: trying to end a session without providing the exercises made!'}
             
             rtex_dict = dict()
@@ -248,12 +250,19 @@ class PostRoutineSession(Resource):
 
             rtex_list_og = []
             for rtex in query:
-                rtex_list_og.append(rtex.serialize())
+                data_rtex = rtex_dict[rtex.exercise_id]
+                rtex.sets = data_rtex.get('sets', rtex.sets)
+                rtex.reps = data_rtex.get('reps', rtex.reps)
+                rtex.weight = data_rtex.get('weight', rtex.weight)
+                rtex.notes = data_rtex.get('notes', rtex.notes)
+                rtex_list_og.append(rtex)
+
+            session.duration = func.now() - session.created_at
 
             db.session.commit()
 
-            return {'rtexdict': rtex_dict,
-                    'query': str(rtex_list_og)}, 201
+            return {'session_duration': str(session.duration),
+                    'exercises_done': [rtex.serialize() for rtex in rtex_list_og]}, 201
     
 
 
