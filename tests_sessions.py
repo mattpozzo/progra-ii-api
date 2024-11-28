@@ -65,10 +65,10 @@ ejercicio_tricep = {"exercise_id": ejercicio_tricep_og["id"],
                     'reps': 20,
                     'weight': 15}
 
-json={"routine_exercises": [ejercicio_pecho, ejercicio_tricep]}
+json = {"routine_exercises": [ejercicio_pecho, ejercicio_tricep]}
 
 print('Test Train')
-response_get = post('http://127.0.0.1:5000/routine/1/train/', headers=headersJson, json={json})
+response_get = post('http://127.0.0.1:5000/routine/1/train/', headers=headersJson, json=json)
 pprint.pprint(response_get.json(), sort_dicts=False)
 
 
