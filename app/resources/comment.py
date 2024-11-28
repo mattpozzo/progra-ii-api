@@ -10,6 +10,15 @@ comment_ns = Namespace('comments', description='Operaciones relacionadas con com
 
 @comment_ns.route('/')
 class GetCreateComments(Resource):
+    def _find_gym(self, comment):
+        if comment.post:
+            return comment.post.gym_id
+        else:
+            return self.find_gym(self.comment)
+
+    def _can_be_read(self, user):
+        return self._find_gym(self) in [gym.gym_id for gym in user.gyms]
+
     @authorize
     def get(user: User, self):
         post_id = request.args.get('post', type=int)
@@ -17,7 +26,7 @@ class GetCreateComments(Resource):
         user_id = request.args.get('user', type=int)
         
         # If user and/or parent are provided, filter by them
-        cond = (Comment.active == True, Comment.can_be_read(user))
+        cond = (Comment.active == True,)
         if post_id is not None:
             cond += (Comment.post_id == post_id,)
         if comment_id is not None:
@@ -26,6 +35,7 @@ class GetCreateComments(Resource):
             cond += (Comment.created_by == user_id,)
 
         comments = Comment.query.filter(*cond).all()
+        comments = list(filter(lambda comment: comment.can_be_read(user), comments))
         return [comment.serialize() for comment in comments], 200
     
     @authorize
@@ -79,9 +89,12 @@ class GetUpdateDeleteComment(Resource):
         
     @authorize
     def patch(user: User, self, id):
-        comment = Comment.query.filter_by(id=id, created_by=user.id, active=True).first()
+        comment = Comment.query.filter_by(id=id, active=True).first()
         if not comment:
             return {'message': 'Comment not found.'}, 404
+        
+        if comment.created_by != user.id:
+            return {'message': 'User cannot modify the comment.'}, 403
         
         data = request.json
         comment.body = data.get('body', comment.body)
@@ -90,9 +103,12 @@ class GetUpdateDeleteComment(Resource):
     
     @authorize
     def delete(user: User, self, id):
-        comment = Comment.query.filter_by(id=id, created_by=user.id).first()
+        comment = Comment.query.filter_by(id=id, active=True).first()
         if not comment:
             return {'message': 'Comment not found.'}, 404
+        
+        if comment.created_by != user.id:
+            return {'message': 'User cannot delete the comment.'}, 403
         
         comment.active = False
         db.session.commit()
