@@ -16,13 +16,8 @@ class GetCreatePosts(Resource):
         user_id = request.args.get('user', type=int)
         
         # If user and/or gym are provided, filter by them
-        cond = (Post.active == True,)
+        cond = (Post.active == True, Post.can_be_read(user))
         if gym_id is not None:
-            is_member = len(list(filter(lambda x: x.gym_id == gym_id, user.gyms))) > 0
-
-            if not is_member:
-                return {'message': 'User is not a member of the gym.'}, 403
-            
             cond += (Post.gym_id == gym_id,)
         if user_id is not None:
             cond += (Post.created_by == user_id,)
@@ -57,10 +52,8 @@ class GetUpdateDeletePost(Resource):
 
         if not post:
             return {'message': 'Post not found.'}, 404
-    
-        is_member = len(list(filter(lambda x: x.gym_id == post.gym_id, user.gyms))) > 0
-
-        if not is_member:
+        
+        if not post.can_be_read(user):
             return {'message': 'User is not a member of the gym.'}, 403
 
         return post.serialize(), 200
