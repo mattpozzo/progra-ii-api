@@ -21,7 +21,6 @@ recipe_model = recipe_ns.model('Recipe', {
 @recipe_ns.route('/')
 class RecipeResource(Resource):
     @authorize  
-    @recipe_ns.doc('create_recipe') 
     @recipe_ns.expect(recipe_model)  
     @recipe_ns.marshal_with(recipe_model, code=201) 
     def post(self, user: User):
@@ -40,11 +39,11 @@ class RecipeResource(Resource):
         created_by = data.get('created_by')  
         ingredients_data = data.get('ingredients', [])
 
-        # Validación del título
+        
         if not title:
             return {'message': 'Title is required'}, 400
 
-        # Crear la nueva receta
+        
         new_recipe = Recipe(
             title=title,
             description=description,
@@ -55,7 +54,7 @@ class RecipeResource(Resource):
         db.session.add(new_recipe)
         db.session.flush()
 
-        # Agregar los ingredientes
+        
         for ingredient_data in ingredients_data:
             ingredient_id = ingredient_data.get('ingredient_id')
             quantity = ingredient_data.get('quantity')
@@ -75,7 +74,7 @@ class RecipeResource(Resource):
             )
             db.session.add(recipe_ingredient)
 
-        # Confirmar los cambios en la base de datos
+        
         try:
             db.session.commit()
             return new_recipe.serialize(), 201
@@ -143,21 +142,20 @@ class RecipeListResource(Resource):
         curl -X GET http://localhost:5000/recipes/
         """
         
-        # Recupera todas las recetas de la base de datos
+        
         recipes = Recipe.query.all()
 
-        # Verifica si hay recetas
+        
         if not recipes:
             return {'message': 'No recipes found'}, 404
 
-        # Serializa las recetas y las devuelve en la respuesta
+        
         return [recipe.serialize() for recipe in recipes], 200
 
 
 #MODIFICA UNA RECETA CON PATH
 @recipe_ns.route('/<int:id>')
-class RecipeResource(Resource):
-    @recipe_ns.doc('update_recipe')
+class RecipeResource_path(Resource):
     @recipe_ns.expect(recipe_model)
     def patch(self, id):
         """
@@ -210,15 +208,14 @@ class RecipeDetailResource(Resource):
         -H "Authorization: Bearer <tu_token_jwt>"
         """
         
-        # Buscar la receta por ID
-        recipe = Recipe.query.get(recipe_id)
+        recipe = Recipe.query.filter_by(user_id=user.id, id=id).first()
         if not recipe:
             return {'message': 'Recipe not found'}, 404
 
-        # Obtener los ingredientes de la receta
+        
         ingredients = RecipeIngredient.query.filter_by(recipe_id=recipe_id).all()
 
-        # Preparar los datos de los ingredientes
+        
         ingredients_data = [
             {
                 'ingredient_id': ri.ingredient_id,
@@ -227,13 +224,13 @@ class RecipeDetailResource(Resource):
             } for ri in ingredients
         ]
 
-        # Preparar los datos de la receta, incluyendo el autor como `created_by`
+        
         recipe_data = {
             'id': recipe.id,
             'title': recipe.title,
             'description': recipe.description,
             'body': recipe.body,
-            'author': recipe.created_by,  # Usar `created_by` como el autor (ID del usuario)
+            'author': recipe.author,
             'ingredients': ingredients_data
         }
 
@@ -241,9 +238,10 @@ class RecipeDetailResource(Resource):
 
 
 
+
 #ELIMINA UNA RECETA
 @recipe_ns.route('/<int:id>')
-class RecipeResource(Resource):
+class DeleteRecipe(Resource):
     @recipe_ns.doc('delete_recipe')
     def delete(self, id):
         """

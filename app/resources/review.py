@@ -142,7 +142,7 @@ class ReviewListResource(Resource):
 
 # PATCH PARA ACTUALIZAR UNA REVIEW
 @review_ns.route('/<int:id>')
-class ReviewResource(Resource):
+class change_review(Resource):
     @review_ns.doc('update_review')
     @review_ns.expect(review_model)  
     def patch(self, id):
@@ -192,7 +192,7 @@ class ReviewListResource(Resource):
 
 
 @review_ns.route('/<int:id>')
-class ReviewResource(Resource):
+class delete_review(Resource):
     @review_ns.doc('delete_review')
     def delete(self, id):
         """

@@ -87,27 +87,26 @@ class Ingredient(db.Model):
 class MealSchedule(db.Model):
     __tablename__ = 'meal_schedule'
 
-    unique_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     week_day = db.Column(db.Integer, nullable=False)
     hour = db.Column(db.Time, nullable=False)
     training_plan_id = db.Column(db.Integer, nullable=True)
-    recipe_id = db.Column(db.Integer, db.ForeignKey('recipe.id'),
-                          nullable=False)
+    recipe_id = db.Column(db.Integer, db.ForeignKey('recipe.id'), nullable=False)
 
-    recipe = db.relationship('Recipe', backref=db.backref('meal_schedules',
-                                                          lazy=True))
-    
+    # Relación modificada con primaryjoin
+    recipe = db.relationship('Recipe', backref=db.backref('meal_schedules', lazy=True),
+                             primaryjoin='MealSchedule.recipe_id == Recipe.id')
 
     def serialize(self):
-        
         return {
-            'unique_id': self.unique_id,
+            'id': self.id,
             'week_day': self.week_day,
-            'hour': str(self.hour),  # Convertimos el objeto Time a string
+            'hour': str(self.hour),
             'training_plan_id': self.training_plan_id,
             'recipe_id': self.recipe_id,
-            'recipe': self.recipe.title if self.recipe else None  # Incluye el título de la receta asociada si existe
+            'recipe': self.recipe.title if self.recipe else None
         }
+
 
 
 
@@ -201,14 +200,11 @@ class Recipe(db.Model, BaseAudit):
     body = db.Column(db.Text, nullable=True)
     created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
-    
     creator = db.relationship('User', backref='recipes', lazy=True, foreign_keys=[created_by])
-
     recipe_ingredients = db.relationship('RecipeIngredient', back_populates='parent_recipe', lazy=True)
 
     def serialize(self):
-        """Devuelve los datos del modelo en formato JSON."""
-        return super().serialize() | {
+        return {
             "id": self.id,
             "title": self.title,
             "description": self.description,
@@ -223,6 +219,7 @@ class Recipe(db.Model, BaseAudit):
                 for ri in self.recipe_ingredients
             ]
         }
+
 
 
 
@@ -250,29 +247,34 @@ class RecipeIngredient(db.Model):
 
 
 class Review(db.Model):
-    __tablename__ = 'review'
-
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    __tablename__ = 'reviews'
+    id = db.Column(db.Integer, primary_key=True)
     score = db.Column(db.Integer, nullable=False)
-    comment = db.Column(db.String(500), nullable=True)
-    recipe_id = db.Column(db.Integer, db.ForeignKey('recipe.id'), nullable=True)
-    gym_id = db.Column(db.Integer, db.ForeignKey('gym.id'), nullable=True)
+    comment = db.Column(db.String(255), nullable=True)
+    recipe_id = db.Column(db.Integer, db.ForeignKey('recipe.id'), nullable=False)
+    gym_id = db.Column(db.Integer, db.ForeignKey('gym.id'), nullable=True)  
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  
 
     
-    recipe = db.relationship('Recipe', backref='reviews', lazy=True)
-
+    recipe = db.relationship('Recipe', backref='reviews')
+    gym = db.relationship('Gym', backref='reviews')  
+    user = db.relationship('User', backref='reviews') 
     
-    gym = db.relationship('Gym', backref='reviews', lazy=True)
+    def __init__(self, score, comment, recipe_id, gym_id=None, user_id=None):
+        self.score = score
+        self.comment = comment
+        self.recipe_id = recipe_id
+        self.gym_id = gym_id
+        self.user_id = user_id  
 
     def serialize(self):
         return {
-            'id': self.id,  
+            'ID': self.id,
             'score': self.score,
             'comment': self.comment,
             'recipe_id': self.recipe_id,
             'gym_id': self.gym_id,
-            'recipe': self.recipe.serialize() if self.recipe else None, 
-            'gym': self.gym.serialize() if self.gym else None  
+            'user_id': self.user_id  
         }
 
 
