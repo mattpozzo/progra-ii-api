@@ -1,6 +1,6 @@
 from flask_restx import Namespace, Resource
 from flask import request
-from app.models.models import Routine, RoutineExercise
+from app.models.models import Routine, RoutineExercise, RoutineSchedule
 from app.models.models import User
 from app.resources.auth.authorize import authorize
 from app.models import db
@@ -16,8 +16,17 @@ class GetRoutines(Resource):
     '''Devuelve lista de rutinas asociadas al usuario que lo pide'''
     @authorize
     def get(user: User, self):
+        training_plan_id = request.args.get('training_plan_id', type=int)
 
-        routines = Routine.query.filter_by(user_id=user.id, active=True).all()
+        query = Routine.query.filter_by(user_id=user.id, active=True)
+
+        if training_plan_id is not None:
+            query = query.join(RoutineSchedule).filter(
+                RoutineSchedule.training_plan_id == training_plan_id
+                )
+
+        # Fetch filtered routines
+        routines = query.all()
         return [routine.serialize() for routine in routines], 200
 
 
@@ -90,6 +99,7 @@ class GetUpdateDeleteRoutine(Resource):
 
         return routine.serialize(), 200
 
+
 @routine_ns.route('/create/')
 class PostRoutine(Resource):
     @authorize
@@ -135,7 +145,7 @@ class GetRoutineExercise(Resource):
     '''Devuelve ejercicios para una rutina, dado id, si pertenece al usuario'''
     @authorize
     def get(user: User, self,  id):
-        routine = Routine.query.filter_by(id=id, user_id=user.id).first()
+        routine = Routine.query.filter_by(id=id, user_id=user.id, active=True).first()
 
         if not routine:
             return {'message': 'Routine not found or not authorized to access this resource.'}, 404
@@ -143,3 +153,27 @@ class GetRoutineExercise(Resource):
         routine_exercises = routine.routine_exercises
 
         return [rt_ex.serialize() for rt_ex in routine_exercises], 200
+
+
+@routine_ns.route('/templates/')
+class GetTemplateRoutines(Resource):
+    '''Devuelve ejercicios para una rutina, dado id, si pertenece al usuario'''
+    @authorize
+    def get(user: User, self):
+
+        # Subquery to find all routines with a RoutineSchedule
+        subquery = db.session.query(RoutineSchedule.routine_id).distinct()
+
+        # Query routines for the user, excluding those in the subquery
+        routines = Routine.query.filter(
+            Routine.user_id == user.id,
+            Routine.active == True,
+            ~Routine.id.in_(subquery)  # Exclude routines with a RoutineSchedule
+        ).all()
+
+        # Handle no results
+        if not routines:
+            return {'message': 'No template routines found for the user.'}, 404
+
+        # Serialize and return results
+        return [routine.serialize() for routine in routines], 200
