@@ -13,13 +13,6 @@ from app.resources.auth.authorize import authorize
 user_ns = Namespace('users', description='Operaciones relacionadas con usuarios')
 
 
-
-user_ns = Namespace('users', description='Operaciones relacionadas con usuarios')
-
-
-user_ns = Namespace('users', description='Operaciones relacionadas con usuarios')
-
-
 @user_ns.route('/register')
 class RegisterUser(Resource):
     def post(self):
@@ -59,7 +52,7 @@ class GetUsers(Resource):
     def get(user: User, self):
         gym_id = request.args.get('gym', type=int)
 
-        
+
         # If gym is provided, filter by gym
         cond = True
         if gym_id is not None:
