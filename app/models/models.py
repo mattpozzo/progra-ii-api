@@ -1,6 +1,6 @@
 from typing import List
 
-from sqlalchemy import DateTime, Time
+from sqlalchemy import DateTime, Time, func
 from app.models import db
 from app.models.audit.base_audit import BaseAudit
 from sqlalchemy.orm import Mapped
@@ -285,8 +285,7 @@ class Routine(db.Model, BaseAudit):
     gym_id = db.Column(db.Integer, db.ForeignKey('gym.id'))
 
     user = db.relationship('User',
-                           backref=db.backref('routines',
-                                              lazy=True),
+                           back_populates='routines',
                            foreign_keys=[user_id])
     gym = db.relationship('Gym',
                           backref=db.backref('routines',
@@ -309,11 +308,11 @@ class RoutineExercise(db.Model, BaseAudit):
     sets = db.Column(db.Integer, nullable=False)
     reps = db.Column(db.Integer, nullable=False)
     weight = db.Column(db.Integer, nullable=False)
-    exercise_id = db.Column(db.Integer, db.ForeignKey('exercise.id'))
+    exercise_id = db.Column(db.Integer, db.ForeignKey('exercise.id'), nullable=False)
     notes = db.Column(db.String(512))
     session_id = db.Column(db.Integer, db.ForeignKey('session.id'),
                            nullable=True)
-    routine_id = db.Column(db.Integer, db.ForeignKey('routine.id'))
+    routine_id = db.Column(db.Integer, db.ForeignKey('routine.id'), nullable=False) #OJO, así es mejor delete logico
 
     exercise = db.relationship('Exercise',
                                backref=db.backref('routine_exercises',
@@ -329,13 +328,12 @@ class RoutineExercise(db.Model, BaseAudit):
 
     def serialize(self):
         return super().serialize() | {
-            "id": self.id,
             'sets': self.sets,
             'reps': self.reps,
             'weight': self.weight,
-            'exercise': self.exercise.serialize(),
-            'session': self.session.serialize() if self.session else None,
-            'routine': self.routine.serialize()
+            'exercise': self.exercise.id,
+            'session': self.session.id,
+            'routine': self.routine.id
         }
 
 
@@ -357,8 +355,8 @@ class RoutineSchedule(db.Model, BaseAudit):
                            nullable=False)
 
     training_plan = db.relationship('TrainingPlan',
-                                    backref=db.backref('routine_schedules',
-                                                       lazy=True))
+                                    back_populates='routine_schedules',
+                                    foreign_keys=[training_plan_id])
     routine = db.relationship('Routine')
 
     def serialize(self):
@@ -374,17 +372,16 @@ class RoutineSchedule(db.Model, BaseAudit):
 class Session(db.Model, BaseAudit):
     __tablename__ = 'session'
     id = db.Column(db.Integer, primary_key=True)
-    date = db.Column(DateTime(timezone=True), nullable=False)
-    duration = db.Column(db.Interval, nullable=False)
+    duration = db.Column(db.Interval)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
-    user = db.relationship('User', backref=db.backref('sessions', lazy=True),
+    user = db.relationship('User', back_populates='sessions',
                            foreign_keys=[user_id])
 
     def serialize(self):
         return super().serialize() | {
             "id": self.id,
-            "date": self.date,
+            "date": str(self.created_at),
             "duration": self.duration,
             'user': self.user.serialize()
         }
@@ -414,6 +411,12 @@ class TrainingPlan(db.Model, BaseAudit):
             'completed_week': self.completed_week
         }
 
+
+TrainingPlan.routine_schedules: Mapped[List[RoutineSchedule]] = db.relationship(
+    'RoutineSchedule',
+    back_populates='training_plan',
+    foreign_keys=[RoutineSchedule.training_plan_id],
+)
 
 class Trophy(db.Model, BaseAudit):
     __tablename__ = 'trophy'
@@ -446,6 +449,12 @@ class User(db.Model):
     certified = db.Column(db.Boolean, nullable=False)
 
     notifications: Mapped[List['NotificationUser']] = db.relationship(back_populates="user", foreign_keys=[NotificationUser.user_id])
+    sessions: Mapped[List['Session']] = db.relationship('Session',
+                                                        back_populates='user',
+                                                        foreign_keys=[Session.user_id])
+    routines: Mapped[List['Routine']] = db.relationship('Routine',
+                                                        back_populates='user',
+                                                        foreign_keys=[Routine.user_id])
 
     def set_password(self, password):
         self.salt = os.urandom(16).hex()
