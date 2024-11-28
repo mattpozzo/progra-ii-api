@@ -205,7 +205,7 @@ class Recipe(db.Model, BaseAudit):
     recipe_ingredients = db.relationship('RecipeIngredient', back_populates='parent_recipe', lazy=True)
 
     def serialize(self):
-        return {
+        return super().serialize() | {
             "id": self.id,
             "title": self.title,
             "description": self.description,
@@ -236,7 +236,7 @@ class RecipeIngredient(db.Model):
     ingredient = db.relationship('Ingredient')
 
     def serialize(self):
-        return {
+        return super().serialize() | {
             "ingredient_id": self.ingredient.id,
             "ingredient_name": self.ingredient.name,
             "quantity": self.quantity
@@ -255,22 +255,22 @@ class Review(db.Model):
     recipe_id = db.Column(db.Integer, db.ForeignKey('recipe.id'), nullable=True)
     gym_id = db.Column(db.Integer, db.ForeignKey('gym.id'), nullable=True)
 
-    # Relación con Recipe
+   
     recipe = db.relationship('Recipe', backref='reviews', lazy=True)
 
-    # Relación con Gym (si es necesario)
+    
     gym = db.relationship('Gym', backref='reviews', lazy=True)
 
 
     def serialize(self):
-        return super().serialize() | {
+        return {
             'UniqueID': self.UniqueID,
             'score': self.score,
             'comment': self.comment,
             'recipe_id': self.recipe_id,
             'gym_id': self.gym_id,
-            'recipe': self.recipe.serialize() if self.recipe else None,  # Suponiendo que Recipe tenga su propio método serialize
-            'gym': self.gym.serialize() if self.gym else None  # Suponiendo que Gym tenga su propio método serialize
+            'recipe': self.recipe.serialize() if self.recipe else None, 
+            'gym': self.gym.serialize() if self.gym else None  
         }
 
 
