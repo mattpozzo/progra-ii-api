@@ -30,34 +30,32 @@ class RecipeResource(Resource):
         -H "Content-Type: application/json" \
         -H "Authorization: Bearer <tu_token_jwt>" \
         -d '{"title": "Milanesa", "description": "Milanesa y papas fritas", "body": "Instrucciones detalladas", 
-             "author": 1, "ingredients": [{"ingredient_id": 1, "quantity": "200g"}, {"ingredient_id": 2, "quantity": "50g"}]}'
+             "created_by": 1, "ingredients": [{"ingredient_id": 1, "quantity": "200g"}, {"ingredient_id": 2, "quantity": "50g"}]}'
         '''
         
         data = request.get_json()
         title = data.get('title')
         description = data.get('description')
         body = data.get('body')
-        author = data.get('author')
+        created_by = data.get('created_by')  
         ingredients_data = data.get('ingredients', [])
 
-        
+        # Validación del título
         if not title:
             return {'message': 'Title is required'}, 400
 
-        
+        # Crear la nueva receta
         new_recipe = Recipe(
             title=title,
             description=description,
             body=body,
-            author=author,
-            created_by=author  
+            created_by=created_by 
         )
 
-        
         db.session.add(new_recipe)
         db.session.flush()
 
-        
+        # Agregar los ingredientes
         for ingredient_data in ingredients_data:
             ingredient_id = ingredient_data.get('ingredient_id')
             quantity = ingredient_data.get('quantity')
@@ -65,13 +63,11 @@ class RecipeResource(Resource):
             if not ingredient_id or not quantity:
                 return {'message': 'Ingredient ID and quantity are required for each ingredient.'}, 400
 
-            
             ingredient = Ingredient.query.get(ingredient_id)
             if not ingredient:
                 db.session.rollback()
                 return {'message': f'Ingredient with ID {ingredient_id} not found.'}, 404
 
-            
             recipe_ingredient = RecipeIngredient(
                 recipe_id=new_recipe.id,
                 ingredient_id=ingredient_id,
@@ -79,14 +75,13 @@ class RecipeResource(Resource):
             )
             db.session.add(recipe_ingredient)
 
-        
+        # Confirmar los cambios en la base de datos
         try:
             db.session.commit()
             return new_recipe.serialize(), 201
         except IntegrityError:
             db.session.rollback()
             return {'message': 'Database conflict. Please check your input.'}, 409
-
 
 
 

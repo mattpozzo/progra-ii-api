@@ -199,18 +199,21 @@ class Recipe(db.Model, BaseAudit):
     title = db.Column(db.String(255), nullable=False)
     description = db.Column(db.Text, nullable=True)
     body = db.Column(db.Text, nullable=True)
-    author = db.Column(db.String(255), nullable=True)
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
-    # Relación con los ingredientes
+    
+    creator = db.relationship('User', backref='recipes', lazy=True, foreign_keys=[created_by])
+
     recipe_ingredients = db.relationship('RecipeIngredient', back_populates='parent_recipe', lazy=True)
 
     def serialize(self):
+        """Devuelve los datos del modelo en formato JSON."""
         return super().serialize() | {
             "id": self.id,
             "title": self.title,
             "description": self.description,
             "body": self.body,
-            "author": self.author,
+            "author": self.created_by,  
             "ingredients": [
                 {
                     "ingredient_id": ri.ingredient.id,
