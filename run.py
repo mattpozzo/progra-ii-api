@@ -4,7 +4,7 @@ from fin_test import delete_all
 from app.utils.muscles import muscles_seeder
 from app.utils.exercises import exercises_seeder
 
-#delete_all()  # keep while testing
+delete_all()  # keep while testing
 load_dotenv()
 
 app, db = create_app()

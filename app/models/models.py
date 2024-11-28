@@ -305,15 +305,14 @@ class Routine(db.Model, BaseAudit):
 
 class RoutineExercise(db.Model, BaseAudit):
     __tablename__ = 'routine_exercise'
-    id = db.Column(db.Integer, primary_key=True)
     sets = db.Column(db.Integer, nullable=False)
     reps = db.Column(db.Integer, nullable=False)
     weight = db.Column(db.Integer, nullable=False)
-    exercise_id = db.Column(db.Integer, db.ForeignKey('exercise.id'))
+    exercise_id = db.Column(db.Integer, db.ForeignKey('exercise.id'), primary_key=True, nullable=False)
     notes = db.Column(db.String(512))
     session_id = db.Column(db.Integer, db.ForeignKey('session.id'),
                            nullable=True)
-    routine_id = db.Column(db.Integer, db.ForeignKey('routine.id'))
+    routine_id = db.Column(db.Integer, db.ForeignKey('routine.id'), primary_key=True, nullable=False) #OJO, así es mejor delete logico
 
     exercise = db.relationship('Exercise',
                                backref=db.backref('routine_exercises',
@@ -329,7 +328,6 @@ class RoutineExercise(db.Model, BaseAudit):
 
     def serialize(self):
         return super().serialize() | {
-            "id": self.id,
             'sets': self.sets,
             'reps': self.reps,
             'weight': self.weight,
