@@ -15,10 +15,7 @@ routine_ns = Namespace('routine',
 class GetRoutines(Resource):
     '''Devuelve lista de rutinas asociadas al usuario que lo pide'''
     @authorize
-    def get(user: User, self):  # asco but ok?
-        # muscle_id = request.args.get('muscle', type=int)
-        # cond = True
-        # if muscle_id is not None:
+    def get(user: User, self):
         cond = Routine.user_id == user.id
 
         routines = Routine.query.filter(cond).all()
