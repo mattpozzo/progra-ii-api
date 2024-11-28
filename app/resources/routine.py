@@ -179,7 +179,7 @@ class GetTemplateRoutines(Resource):
         return [routine.serialize() for routine in routines], 200
 
 
-@routine_ns.route('/<int:id>/train')
+@routine_ns.route('/<int:id>/train/')
 class PostRoutineSession(Resource):
 
     @authorize
@@ -200,6 +200,8 @@ class PostRoutineSession(Resource):
             routine = Routine.query.filter_by(user_id=user.id,id=id).first()
             templates = routine.routine_exercises
 
+            res = []
+
             for template in templates:
 
                 new_rtex = RoutineExercise(
@@ -213,7 +215,13 @@ class PostRoutineSession(Resource):
                     session_id=session.id
                 )
 
+                res.append(new_rtex)
+
                 db.session.add(new_rtex)
+
+            db.session.commit()
+
+            return {'templates': [re.serialize() for re in res]}, 201
         
         else:
             routines = Routine.query.filter_by(user_id=user.id, active=True)
@@ -232,20 +240,20 @@ class PostRoutineSession(Resource):
             
             rtex_dict = dict()
 
-            # for exercise in data['routine_exercises']:
-            #     rtex_dict[exercise['id']]
+            for exercise in data['routine_exercises']:
                 #la idea es, a partir de rtex en json, hacer dict id: rtex.
                 #con ese dict, itero sobre query (son los rtex creados anteriormente)
                 #que si tienen session id, y los modifico en función de su id.
+                rtex_dict[exercise['id']] = exercise
+
+            db.session.commit()
+
+            return {'rtexdict': rtex_dict,
+                    'query': query}, 201
+    
+
+
+        
 
 
 
-        # Fetch filtered routines
-        routines = query.all()
-
-
-
-
-        db.session.commit()
-
-        return str(template), 201
