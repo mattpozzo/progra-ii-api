@@ -15,6 +15,8 @@ from .resources.post import post_ns
 from .resources.exercise import exercise_ns
 from .resources.muscles import muscle_ns
 from .resources.routine import routine_ns
+from .resources.review import review_ns
+
 
 def create_app():
     app = Flask(__name__)
@@ -36,7 +38,7 @@ def create_app():
     api.add_namespace(exercise_ns)
     api.add_namespace(muscle_ns)
     api.add_namespace(routine_ns)
-
+    api.add_namespace(review_ns)
     with app.app_context():
         db.create_all()
 
