@@ -4,6 +4,7 @@ from sqlalchemy import DateTime, Time
 from app.models import db
 from app.models.audit.base_audit import BaseAudit
 from sqlalchemy.orm import Mapped
+from sqlalchemy.ext.hybrid import hybrid_method
 
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
@@ -12,11 +13,26 @@ import os
 class Comment(db.Model, BaseAudit):
     __tablename__ = 'comment'
     id = db.Column(db.Integer, primary_key=True)
+    body = db.Column(db.String(), nullable=False)
     post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
 
-    body = db.Column(db.String(), nullable=False)
+    post = db.relationship('Post',
+                             backref=db.backref('comments'),
+                             lazy=True)
 
-    post = db.relationship('Post', backref=db.backref('comments'), lazy=True)
+    def find_gym(self, comment):
+        if comment.post:
+            return comment.post.gym_id
+        else:
+            return self.find_gym(self.comment)
+
+    @hybrid_method
+    def can_be_read(self, user):
+        return self.find_gym(self) in [gym.gym_id for gym in user.gyms]
+
+    @can_be_read.expression
+    def can_be_read(cls, user):
+        return cls.find_gym(cls) in [gym.gym_id for gym in user.gyms]
 
     def serialize(self):
         return super().serialize() | {
@@ -29,9 +45,10 @@ class Comment(db.Model, BaseAudit):
 
 Comment.comment_id = db.Column(db.Integer, db.ForeignKey('comment.id'))
 Comment.comment = db.relationship('Comment',
-                                  backref=db.backref('comments'),
-                                  lazy=True,
+                                  back_populates='comments',
+                                  foreign_keys=[Comment.comment_id],
                                   remote_side=Comment.id)
+Comment.comments = db.relationship('Comment', back_populates='comment', foreign_keys=[Comment.comment_id])
 
 
 class Exercise(db.Model, BaseAudit):
@@ -54,6 +71,8 @@ class Exercise(db.Model, BaseAudit):
             "description": self.description,
             "muscle": self.muscle.serialize()
         }
+
+# Muscle.exercises abajo de Muscle
 
 
 class Gym(db.Model, BaseAudit):
@@ -102,6 +121,9 @@ class Muscle(db.Model, BaseAudit):
             "name": self.name,
             "description": self.description
         }
+
+
+# Muscle.exercises = db.relationship('Exercise', back_populates="muscle", foreign_keys=[Exercise.id])
 
 
 class Notification(db.Model, BaseAudit):
@@ -158,7 +180,17 @@ class Post(db.Model, BaseAudit):
     title = db.Column(db.String(128), nullable=False)
     body = db.Column(db.String(), nullable=False)
 
-    gym = db.relationship('Gym', backref=db.backref('posts'), lazy=True)
+    gym: Mapped['Gym'] = db.relationship(back_populates='posts', foreign_keys=[gym_id])
+    # comments: Mapped[List['Gym']] = db.relationship(back_populates='post', foreign_keys=[Comment.post_id])
+    
+    # VER POR QUÉ ESTO NO FUNCIONA AL QUERER USARLO EN FILTER
+    @hybrid_method
+    def can_be_read(self, user):
+        return self.gym_id in [gym.gym_id for gym in user.gyms]
+
+    @can_be_read.expression
+    def can_be_read(cls, user):
+        return cls.gym_id in [gym.gym_id for gym in user.gyms]
 
     def serialize(self):
         return super().serialize() | {
@@ -167,6 +199,8 @@ class Post(db.Model, BaseAudit):
             "title": self.title,
             "body": self.body
         }
+    
+Gym.posts = db.relationship('Post', back_populates='gym', foreign_keys=[Post.gym_id])
 
 
 class Recipe(db.Model):
@@ -271,7 +305,9 @@ class Routine(db.Model, BaseAudit):
     __tablename__ = 'routine'
     id = db.Column(db.Integer, primary_key=True)
 
-    name = db.Column(db.String(128), nullable=False)
+    name = db.Column(db.String(128),
+                     nullable=False,
+                     unique=True)
     description = db.Column(db.String(512))
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -317,8 +353,7 @@ class RoutineExercise(db.Model, BaseAudit):
                                                  lazy=True),
                               foreign_keys=[session_id])
     routine = db.relationship('Routine',
-                              backref=db.backref('routine_exercises',
-                                                 lazy=True),
+                              back_populates='routine_exercises',
                               foreign_keys=[routine_id])
 
     def serialize(self):
@@ -328,9 +363,14 @@ class RoutineExercise(db.Model, BaseAudit):
             'reps': self.reps,
             'weight': self.weight,
             'exercise': self.exercise.serialize(),
-            'session': self.session.serialize() if self._session else None,
+            'session': self.session.serialize() if self.session else None,
             'routine': self.routine.serialize()
         }
+
+
+Routine.routine_exercises: Mapped[List['RoutineExercise']] = db.relationship('RoutineExercise',
+                                              back_populates='routine',
+                                              foreign_keys=[RoutineExercise.routine_id])
 
 
 class RoutineSchedule(db.Model, BaseAudit):
@@ -414,6 +454,12 @@ class Trophy(db.Model, BaseAudit):
     def grant(self, user):
         user_trophy = UserTrophy(user=user, trophy=self)
         db.session.add(user_trophy)
+
+        # Envía una notificación al usuario
+        notification = Notification(title="Nuevo trofeo",
+                                    body=f"¡Has ganado el trofeo {self.name}!")
+        notification.send_to_users([user])
+
         db.session.commit()
 
     def serialize(self):

@@ -1,0 +1,25 @@
+muscle_id,name,description
+1,Bicep Curls,Bicep Curls targets the biceps brachii.
+1,Hammer Curls,Hammer Curls targets the biceps brachii.
+1,Concentration Curls,Concentration Curls targets the biceps brachii.
+2,Tricep Dips,Tricep Dips targets the triceps brachii.
+2,Overhead Tricep Extension,Overhead Tricep Extension targets the triceps brachii.
+2,Tricep Pushdowns,Tricep Pushdowns targets the triceps brachii.
+3,Overhead Press,Overhead Press targets the deltoid.
+3,Lateral Raises,Lateral Raises targets the deltoid.
+3,Arnold Press,Arnold Press targets the deltoid.
+4,Bench Press,Bench Press targets the pectoralis major.
+4,Push-Ups,Push-Ups targets the pectoralis major.
+4,Chest Fly,Chest Fly targets the pectoralis major.
+5,Pull-Ups,Pull-Ups targets the latissimus dorsi.
+5,Lat Pulldown,Lat Pulldown targets the latissimus dorsi.
+5,Dumbbell Rows,Dumbbell Rows targets the latissimus dorsi.
+6,Exercise Abdomen 1,Exercise 1 targets the rectus abdominis.
+6,Exercise Abdomen 2,Exercise 2 targets the rectus abdominis.
+6,Exercise Abdomen 3,Exercise 3 targets the rectus abdominis.
+7,Exercise Culo 1,Exercise 1 targets the gluteus maximus.
+7,Exercise Culo 2,Exercise 2 targets the gluteus maximus.
+7,Exercise Culo 3,Exercise 3 targets the gluteus maximus.
+8,Exercise cuadriceps 1,Exercise 1 targets the quadriceps.
+8,Exercise cuadriceps 2,Exercise 2 targets the quadriceps.
+8,Exercise cuadriceps 3,Exercise 3 targets the quadriceps.
