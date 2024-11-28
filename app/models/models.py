@@ -4,6 +4,7 @@ from sqlalchemy import DateTime, Time, func
 from app.models import db
 from app.models.audit.base_audit import BaseAudit
 from sqlalchemy.orm import Mapped
+from sqlalchemy.ext.hybrid import hybrid_method
 
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
@@ -12,26 +13,37 @@ import os
 class Comment(db.Model, BaseAudit):
     __tablename__ = 'comment'
     id = db.Column(db.Integer, primary_key=True)
+    body = db.Column(db.String(), nullable=False)
     post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
 
-    body = db.Column(db.String(), nullable=False)
+    post = db.relationship('Post',
+                             backref=db.backref('comments'),
+                             lazy=True)
 
-    post = db.relationship('Post', backref=db.backref('comments'), lazy=True)
+    def find_gym(self, comment):
+        if comment.post:
+            return comment.post.gym_id
+        else:
+            return self.find_gym(comment.comment)
+
+    def can_be_read(self, user):
+        return self.find_gym(self) in [gym.gym_id for gym in user.gyms] # absolutely impossible to use hybrid method here, thanks sqlalchemy
 
     def serialize(self):
         return super().serialize() | {
             "id": self.id,
-            "post": self.post.serialize(),
-            "comment": self.comment.serialize(),
+            "post": self.post_id,
+            "comment": self.comment_id,
             "body": self.body
         }
 
 
 Comment.comment_id = db.Column(db.Integer, db.ForeignKey('comment.id'))
 Comment.comment = db.relationship('Comment',
-                                  backref=db.backref('comments'),
-                                  lazy=True,
+                                  back_populates='comments',
+                                  foreign_keys=[Comment.comment_id],
                                   remote_side=Comment.id)
+Comment.comments = db.relationship('Comment', back_populates='comment', foreign_keys=[Comment.comment_id])
 
 
 class Exercise(db.Model, BaseAudit):
@@ -163,7 +175,16 @@ class Post(db.Model, BaseAudit):
     title = db.Column(db.String(128), nullable=False)
     body = db.Column(db.String(), nullable=False)
 
-    gym = db.relationship('Gym', backref=db.backref('posts'), lazy=True)
+    gym: Mapped['Gym'] = db.relationship(back_populates='posts', foreign_keys=[gym_id])
+    # comments: Mapped[List['Gym']] = db.relationship(back_populates='post', foreign_keys=[Comment.post_id])
+    
+    @hybrid_method
+    def can_be_read(self, user):
+        return self.gym_id in [gym.gym_id for gym in user.gyms]
+
+    @can_be_read.expression
+    def can_be_read(cls, user):
+        return cls.gym_id.in_([gym.gym_id for gym in user.gyms])    # TE ODIO SQLALCHEMY
 
     def serialize(self):
         return super().serialize() | {
@@ -172,6 +193,8 @@ class Post(db.Model, BaseAudit):
             "title": self.title,
             "body": self.body
         }
+    
+Gym.posts = db.relationship('Post', back_populates='gym', foreign_keys=[Post.gym_id])
 
 
 class Recipe(db.Model):
@@ -428,6 +451,12 @@ class Trophy(db.Model, BaseAudit):
     def grant(self, user):
         user_trophy = UserTrophy(user=user, trophy=self)
         db.session.add(user_trophy)
+
+        # Envía una notificación al usuario
+        notification = Notification(title="Nuevo trofeo",
+                                    body=f"¡Has ganado el trofeo {self.name}!")
+        notification.send_to_users([user])
+
         db.session.commit()
 
     def serialize(self):
@@ -470,11 +499,6 @@ class User(db.Model):
             "last_name": self.last_name,
             "email": self.email,
             "certified": self.certified,
-
-
-            # "notifications": [notification.serialize() for notification in
-            #                   self.notifications]
-
         }
 
 
