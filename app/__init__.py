@@ -15,6 +15,7 @@ from .resources.post import post_ns
 from .resources.exercise import exercise_ns
 from .resources.muscles import muscle_ns
 from .resources.routine import routine_ns
+from .resources.comment import comment_ns
 from .resources.training_plan import training_plan_ns
 
 def create_app():
@@ -37,6 +38,7 @@ def create_app():
     api.add_namespace(exercise_ns)
     api.add_namespace(muscle_ns)
     api.add_namespace(routine_ns)
+    api.add_namespace(comment_ns)
     api.add_namespace(training_plan_ns)
 
     with app.app_context():
