@@ -210,14 +210,15 @@ class RecipeDetailResource(Resource):
         -H "Authorization: Bearer <tu_token_jwt>"
         """
         
+        # Buscar la receta por ID
         recipe = Recipe.query.get(recipe_id)
         if not recipe:
             return {'message': 'Recipe not found'}, 404
 
-        
+        # Obtener los ingredientes de la receta
         ingredients = RecipeIngredient.query.filter_by(recipe_id=recipe_id).all()
 
-        
+        # Preparar los datos de los ingredientes
         ingredients_data = [
             {
                 'ingredient_id': ri.ingredient_id,
@@ -226,18 +227,17 @@ class RecipeDetailResource(Resource):
             } for ri in ingredients
         ]
 
-        
+        # Preparar los datos de la receta, incluyendo el autor como `created_by`
         recipe_data = {
             'id': recipe.id,
             'title': recipe.title,
             'description': recipe.description,
             'body': recipe.body,
-            'author': recipe.author,
+            'author': recipe.created_by,  # Usar `created_by` como el autor (ID del usuario)
             'ingredients': ingredients_data
         }
 
         return recipe_data, 200
-
 
 
 

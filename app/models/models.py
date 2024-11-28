@@ -252,22 +252,21 @@ class RecipeIngredient(db.Model):
 class Review(db.Model):
     __tablename__ = 'review'
 
-    ID = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     score = db.Column(db.Integer, nullable=False)
     comment = db.Column(db.String(500), nullable=True)
     recipe_id = db.Column(db.Integer, db.ForeignKey('recipe.id'), nullable=True)
     gym_id = db.Column(db.Integer, db.ForeignKey('gym.id'), nullable=True)
 
-   
+    
     recipe = db.relationship('Recipe', backref='reviews', lazy=True)
 
     
     gym = db.relationship('Gym', backref='reviews', lazy=True)
 
-
     def serialize(self):
         return {
-            'ID': self.ID,
+            'id': self.id,  
             'score': self.score,
             'comment': self.comment,
             'recipe_id': self.recipe_id,
