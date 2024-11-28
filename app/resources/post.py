@@ -60,9 +60,13 @@ class GetUpdateDeletePost(Resource):
         
     @authorize
     def patch(user: User, self, id):
-        post = Post.query.filter_by(id=id, created_by=user.id, active=True).first()
+        post = Post.query.filter_by(id=id, active=True).first()
+
         if not post:
             return {'message': 'Post not found.'}, 404
+        
+        if post.created_by != user.id:
+            return {'message': 'User cannot modify the post.'}, 403
         
         data = request.json
         post.title = data.get('title', post.title)
@@ -72,9 +76,13 @@ class GetUpdateDeletePost(Resource):
     
     @authorize
     def delete(user: User, self, id):
-        post = Post.query.filter_by(id=id, created_by=user.id).first()
+        post = Post.query.filter_by(id=id, active=True).first()
+
         if not post:
             return {'message': 'Post not found.'}, 404
+        
+        if post.created_by != user.id:
+            return {'message': 'User cannot delete the post.'}, 403
         
         post.active = False
         db.session.commit()
