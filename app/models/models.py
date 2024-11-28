@@ -355,8 +355,8 @@ class RoutineSchedule(db.Model, BaseAudit):
                            nullable=False)
 
     training_plan = db.relationship('TrainingPlan',
-                                    backref=db.backref('routine_schedules',
-                                                       lazy=True))
+                                    back_populates='routine_schedules',
+                                    foreign_keys=[training_plan_id])
     routine = db.relationship('Routine')
 
     def serialize(self):
@@ -412,6 +412,12 @@ class TrainingPlan(db.Model, BaseAudit):
             'completed_week': self.completed_week
         }
 
+
+TrainingPlan.routine_schedules: Mapped[List[RoutineSchedule]] = db.relationship(
+    'RoutineSchedule',
+    back_populates='training_plan',
+    foreign_keys=[RoutineSchedule.training_plan_id],
+)
 
 class Trophy(db.Model, BaseAudit):
     __tablename__ = 'trophy'
